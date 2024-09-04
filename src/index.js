@@ -1,13 +1,25 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
 import reportWebVitals from './reportWebVitals';
+import Header from '../src/shared/header';
+import Summary from '../src/components/summary/summary';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import {SharedSnackbarProvider   } from './shared/snackBar';
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
-    <App />
+  <React.StrictMode> 
+     <SharedSnackbarProvider>
+    <Router>
+    <Header />
+      <Routes>
+        {/* <Route exact path="/" element={<Header />} /> */}
+        <Route exact path="/Projects" element={<Summary/>} />
+      </Routes>
+    </Router>
+    </SharedSnackbarProvider>
   </React.StrictMode>
 );
 
