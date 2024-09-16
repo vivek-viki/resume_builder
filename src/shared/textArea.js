@@ -34,7 +34,7 @@ class MinHeightTextarea extends Component {
     };
 
     this.Textarea = styled(BaseTextareaAutosize)(
-      ({ theme, error }) => `
+      ({ theme, error, isSummaryEmpty }) => `
         box-sizing: border-box;
         width: 100%;
         font-family: 'IBM Plex Sans', sans-serif;
@@ -49,13 +49,12 @@ class MinHeightTextarea extends Component {
         box-shadow: 0px 2px 2px ${theme.palette.mode === 'dark' ? this.grey[900] : this.grey[50]};
 
         &:hover {
-          border-color: ${this.blue[400]};
+          border-color: ${isSummaryEmpty ? 'red' : (theme.palette.mode === 'dark' ? this.grey[500] : this.blue[400])};
         }
 
         &:focus {
-          border-color: ${this.blue[400]};
-          box-shadow: 0 0 0 3px ${theme.palette.mode === 'dark' ? this.blue[600] : this.blue[200]};
-        }
+          border-color: ${isSummaryEmpty ? 'red' : this.blue[400]};
+          box-shadow: 0 0 0 3px ${isSummaryEmpty ? 'rgba(255, 0, 0, 0.5)' : (theme.palette.mode === 'dark' ? this.blue[600] : this.blue[200])};        }
 
         // firefox
         &:focus-visible {
@@ -69,12 +68,17 @@ class MinHeightTextarea extends Component {
     const summary = event.target.value;
 
     // Limit the characters to a maximum of 350
-    if (summary.length <= 350) {
+    if (summary.length <= 350 && this.props.enable) {
       this.setState({
         summary: summary,
         charCount: summary.length
       });
-      this.props.onSummaryChange(summary); // Update parent component
+    }
+    else {
+      this.setState({
+        summary: summary
+      });
+    this.props.onSummaryChange(summary);
     }
   }
 
@@ -88,19 +92,20 @@ class MinHeightTextarea extends Component {
         <Textarea
           aria-label="minimum height"
           minRows={3}
+          required
+          placeholder = {this.props.text}
           value={summary}
           onChange={this.handleSummary}
+          isSummaryEmpty={isSummaryEmpty}
           error={isSummaryEmpty}
           sx={{ resize: 'none' }}
         />
-        {isSummaryEmpty && (
-          <Typography color="error" variant="caption" display="block" gutterBottom>
-            Please enter your summary.
-          </Typography>
-        )}
+        {this.props.enable ? 
         <Typography variant="caption" display="block" gutterBottom>
           {charCount}/350 characters
-        </Typography>
+        </Typography> 
+        :
+        <></>}
       </React.Fragment>
     );
   }

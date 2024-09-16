@@ -13,6 +13,7 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const pages = ['Projects', 'Certificates', 'Links'];
 const settings = ['Profile', 'Logout'];
@@ -44,7 +45,7 @@ class ResponsiveAppBar extends Component {
 
   handleCloseNavMenuLinks = (page) => {
     if (page === 'Projects') {
-      this.props.navigate('/Projects');// Navigate to /about when Projects is clicked
+      this.props.navigate('/Projects');
     }
     this.handleCloseNavMenu();
   };
@@ -53,11 +54,13 @@ class ResponsiveAppBar extends Component {
     const { anchorElNav, anchorElUser } = this.state;
 
     return (
+      <React.Fragment>
       <AppBar position="static">
         <Container maxWidth="xl">
           <Toolbar disableGutters>
             <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '70%' }}>
+              <Link to='/' style={{ textDecoration: 'none', color: 'inherit' }}>
               <Typography
                 variant="h6"
                 noWrap
@@ -70,11 +73,13 @@ class ResponsiveAppBar extends Component {
                   letterSpacing: '.3rem',
                   color: 'inherit',
                   textDecoration: 'none',
+                  whiteSpace: 'normal'
                 }}
               >
                 VIVEK MUKUNDA
               </Typography>
-              <Typography>SOFTWARE ENGINEER</Typography>
+              <Typography sx={{ whiteSpace: 'normal' }}>SOFTWARE ENGINEER</Typography>
+              </Link>
             </div>
 
             <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
@@ -173,6 +178,7 @@ class ResponsiveAppBar extends Component {
           </Toolbar>
         </Container>
       </AppBar>
+       </React.Fragment>
     );
   }
 }

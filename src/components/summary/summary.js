@@ -18,6 +18,8 @@ import Fingerprint from '@mui/icons-material/Fingerprint';
 import Tooltip from '@mui/material/Tooltip';
 import axios from 'axios';
 import {withSharedSnackbar  } from '../../shared/snackBar';
+import LinearStepper from '../../shared/linearStepper';
+import { useNavigate, useParams } from 'react-router-dom';
 
 
 function createData(name, calories, fat, carbs, protein, price) {
@@ -49,7 +51,8 @@ class Row extends React.Component {
     this.state = {
       open: true,
       summary: '',
-      loading: false
+      loading: false  
+     
     };
   }
 
@@ -83,7 +86,8 @@ class Row extends React.Component {
 
   render() {
     const { row } = this.props;
-    const { open } = this.state;
+    const { open , summary } = this.state;
+    const isSummaryEmpty = !summary;
 
     return (
       <React.Fragment>
@@ -104,10 +108,20 @@ class Row extends React.Component {
           <TableCell align="right"></TableCell>
           <TableCell align="right"></TableCell>
           <TableCell align="right">
-          <Tooltip title="Submit">
-          <IconButton aria-label="fingerprint" color="success">
-        <Fingerprint onClick={this.props.submitSummary }/>
+          <Tooltip title="Back">
+            <span>
+        <IconButton aria-label="fingerprint" color="secondary" disabled='true'>
+          <Fingerprint onClick={this.props.backSummary } />
+        </IconButton>
+        </span>
+        </Tooltip>
+          <Tooltip title={isSummaryEmpty ? "Please Enter Summary" : "Submit"}>
+          <span>
+          <IconButton aria-label="fingerprint" color="success"   disabled={!summary}>
+        <Fingerprint onClick={this.props.submitSummary } 
+        />
       </IconButton>
+      </span>
       </Tooltip>
 
           </TableCell>
@@ -116,7 +130,11 @@ class Row extends React.Component {
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
             <Collapse in={open} timeout="auto" unmountOnExit>
               <Box sx={{ margin: 1 }}>
-                <MinHeightTextarea onSummaryChange={this.handleSummaryChange}/>
+                <MinHeightTextarea onSummaryChange={this.handleSummaryChange} 
+                text={"Please Enter Summary"}
+                enable = {true}
+                {...this.props}
+                />
               </Box>
             </Collapse>
           </TableCell>
@@ -133,12 +151,22 @@ const rows = [
 ];
 
 class Summary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.stepperRef = React.createRef(); // Create a reference to the child component
+  }
+
+  backSummary = () => {
+    this.stepperRef.current.handleBack();
+  }
 
   submitSummary = () => {
+    this.stepperRef.current.handleNext();
    if (this.props.enqueueSnackbar) {
       this.props.enqueueSnackbar('This is a shared notification message!', {
         variant: 'success',
       }); }
+      this.props.navigate('/expereince');
     // axios.put(`https://api.example.com/data/`, this.state.summary)
     // .then(response => {
 
@@ -157,6 +185,7 @@ class Summary extends React.Component {
       <Card >
       {/* <CardActionArea > */}
         <CardContent sx={{maxWidth: '100%', width: '90%', height: '65%', boxShadow: 10, marginLeft : '4%', marginTop: '3%', position:'fixed', overflowY: 'auto'}}>
+        <LinearStepper ref={this.stepperRef}/>
       <TableContainer component={Paper} >
         <Table aria-label="collapsible table">
           <TableHead  sx = {{backgroundColor : '#e0e0d1'}} >
@@ -173,6 +202,7 @@ class Summary extends React.Component {
             {rows.map((row) => (
               <Row key={row.name} row={row} 
               submitSummary = {this.submitSummary}
+              backSummary = {this.backSummary}
               {...this.props}
               />
             ))}
@@ -186,15 +216,15 @@ class Summary extends React.Component {
   }
 }
 
-// function WithNavigate(props) {
-//   const navigate = useNavigate();
-//   // const {t} = useTranslation();
-//   const params = useParams();
-//   // const classes = useStyles();
-//   return (
-//     <Summary {...props} routeParams={params} navigate={navigate} />
-//   );
-// }
+function WithNavigate(props) {
+  const navigate = useNavigate();
+  // const {t} = useTranslation();
+  const params = useParams();
+  // const classes = useStyles();
+  return (
+    <Summary {...props} routeParams={params} navigate={navigate} />
+  );
+}
 
 
-export default withSharedSnackbar(Summary);
+export default withSharedSnackbar(WithNavigate);
