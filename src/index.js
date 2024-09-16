@@ -6,7 +6,7 @@ import Header from '../src/shared/header';
 import Summary from '../src/components/summary/summary';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import {SharedSnackbarProvider   } from './shared/snackBar';
-
+import Experience from './components/experience/experience';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -15,8 +15,9 @@ root.render(
     <Router>
     <Header />
       <Routes>
-        {/* <Route exact path="/" element={<Header />} /> */}
+        <Route exact path="/" element={<></>} />
         <Route exact path="/Projects" element={<Summary/>} />
+        <Route exact path="/expereince" element={<Experience/>} />
       </Routes>
     </Router>
     </SharedSnackbarProvider>
