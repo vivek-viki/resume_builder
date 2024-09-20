@@ -422,7 +422,8 @@ class Experience extends React.Component {
     super(props);
     this.stepperRef = React.createRef();
     this.state = {
-      rows : []
+      rows : [],
+      activeStep : 1
     } // Create a reference to the child component
   }
 
@@ -499,7 +500,7 @@ class Experience extends React.Component {
       <Card >
       {/* <CardActionArea > */}
         <CardContent sx={{maxWidth: '100%', width: '93%', height: '65%', boxShadow: 10, marginLeft : '2%', marginTop: '3%', position:'fixed', overflowY: 'auto'}}>
-        <LinearStepper ref={this.stepperRef}/>
+        <LinearStepper ref={this.stepperRef} activeStep={this.state.activeStep}/>
       <TableContainer component={Paper} >
         <Table  aria-label="collapsible table">
           <TableHead className={` ${this.props.classes.tableHeaderRow}`}>
