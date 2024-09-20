@@ -32,23 +32,17 @@ import { useStyles } from '../../shared/styles/defaultStyle';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 
-// const [skillData, setSkillData] = useState([
-//   { key: 1, label: 'React' },
-//   { key: 2, label: 'JavaScript' },
-//   { key: 3, label: 'Node.js' },
-// ]);
 
 class Row extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       open: true,
-      summary: '',
       loading: false,
       task : '',
       row : {
         open: props.row.Id === 0 ? true : false,
-        Company: props.row.company,
+        Company: props.row.Company,
         Designation: props.row.Designation,
         Location: props.row.Location,
         Experience: props.row.Experience,
@@ -75,14 +69,10 @@ class Row extends React.Component {
         { key: 1, label: 'React' },
         { key: 2, label: 'JavaScript' },
         { key: 3, label: 'Node.js' },
-        { key: 3, label: 'MongoDB' },
-        { key: 3, label: 'Oracle' },
-        { key: 3, label: 'Spring Boot' },
-        { key: 3, label: 'Spring Framework' }
-      ], skillsData : [
-        // { key: 1, label: 'React' },
-        // { key: 2, label: 'JavaScript' },
-        // { key: 3, label: 'Node.js' }
+        { key: 4, label: 'MongoDB' },
+        { key: 5, label: 'Oracle' },
+        { key: 6, label: 'Spring Boot' },
+        { key: 7, label: 'Spring Framework' }
       ]
     };
     
@@ -202,14 +192,22 @@ class Row extends React.Component {
 
   handleDelete = (chipToDelete) => {
     this.setState((prevState) => ({
-      skillsData: prevState.skillsData.filter((chip) => chip.key !== chipToDelete.key), // Filter out the deleted chip
+      row: {
+        ...prevState.row,
+        Skills: prevState.row.Skills.filter((skill) => skill !== chipToDelete) // Filter by skill
+      }
     }));
   };
 
   onSelectSkill = (chips) => {
-    let selectedSkill = chips.target.innerText;  // Get the selected skill
+    let selectedSkill = chips.target.innerText;
     this.setState((prevState) => ({
-      skillsData: [...prevState.skillsData, { key: prevState.skillsData.length + 1, label: selectedSkill }]
+      row: {
+        ...prevState.row,
+        Skills: prevState.row.Skills.includes(selectedSkill)
+          ? prevState.row.Skills
+          : [...prevState.row.Skills, selectedSkill] // Avoid duplicates
+      }
     }));
   }
 
@@ -219,10 +217,47 @@ class Row extends React.Component {
     this.setState({ row});
   }
 
+  submitExperience = () => {
+    debugger;
+    let row = {...this.state.row};
+    let ErrorMsg = {...this.state.ErrorMsg};
+    debugger;
+    if(row.Company && row.Designation && row.Location && row.Experience && row.Skills.length > 0 && row.Tasks)
+    {
+      this.props.submitExperienceParent();
+    }
+    else{
+      if (row.Company === "" || row.Company === null) {
+        row.Validations.IsCompany = false;
+        ErrorMsg.Company = "Address cannot be empty";
+      }
+      if(row.Designation === "" || row.Designation === null){
+        row.Validations.IsDesignation = false;
+        ErrorMsg.Designation = "Address cannot be empty";
+      }
+      if(row.Location === "" || row.Location === null){
+        row.Validations.IsLocation = false;
+        ErrorMsg.Location = "Address cannot be empty";
+      }
+      if(row.Experience === "" || row.Experience === null){
+        row.Validations.IsExperience = false;
+        ErrorMsg.Experience = "Address cannot be empty";
+      }
+      if(row.Skills.length === 0){
+        row.Validations.IsSkills = false;
+        ErrorMsg.Skills = "Address cannot be empty";
+      }
+      if(row.Tasks === "" || row.Tasks === null){
+        row.Validations.IsTasks = false;
+        ErrorMsg.Tasks = "Address cannot be empty";
+      }
+      this.setState({ row });
+    }
+    this.setState({ ErrorMsg });
+  }
+
   render() {
     const { row } = this.state;
-    const { ErrorMsg , summary, skillsData } = this.state;
-    const isSummaryEmpty = !summary;
 debugger;
     return (
       <React.Fragment>
@@ -240,13 +275,12 @@ debugger;
           <TableCell  className={this.props.classes.tableCell}>{row.Designation}</TableCell>
           <TableCell  className={this.props.classes.tableCell}>{row.Location}</TableCell>
           <TableCell  className={this.props.classes.tableCell}>{row.Experience}</TableCell>
-          {/* <TableCell className={this.props.classes.tableCell}>{row.Skills}</TableCell> */}
           <TableCell className={this.props.classes.tableCell}>
           <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {skillsData.map((skill, index) => (
+          {row.Skills.map((skill, index) => (
             <Chip
               key={index}
-              label={skill.label}
+              label={skill}
             />
           ))}
           </Box>
@@ -255,15 +289,15 @@ debugger;
           <TableCell align="right">
           <Tooltip title="Back">
             <span>
-        <IconButton aria-label="fingerprint" color="secondary" disabled='true'>
+        <IconButton aria-label="fingerprint" color="secondary">
           <Fingerprint onClick={this.props.backSummary } />
         </IconButton>
         </span>
         </Tooltip>
-          <Tooltip title={isSummaryEmpty ? "Please Enter Expereince" : "Submit"}>
+          <Tooltip title={"Submit"}>
           <span>
-          <IconButton aria-label="fingerprint" color="success"   disabled={!summary}>
-        <Fingerprint onClick={this.props.submitSummary } 
+          <IconButton aria-label="fingerprint" color="success" >
+        <Fingerprint onClick={ this.submitExperience} 
         />
       </IconButton>
       </span>
@@ -344,10 +378,10 @@ debugger;
       ))}
          </Stack>
           <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {skillsData.map((skill, index) => (
+          {row.Skills.map((skill, index) => (
             <Chip
               key={index}
-              label={skill.label}
+              label={skill}
               onDelete={() => this.handleDelete(skill)} // Handle deletion
             />
           ))}
@@ -396,24 +430,50 @@ class Experience extends React.Component {
     this.stepperRef.current.handleBack();
   }
 
-  submitSummary = () => {
-    this.stepperRef.current.handleNext();
-   if (this.props.enqueueSnackbar) {
-      this.props.enqueueSnackbar('This is a shared notification message!', {
-        variant: 'success',
-      }); }
-    // axios.put(`https://api.example.com/data/`, this.state.summary)
-    // .then(response => {
-
-    //   this.setState({ data: response.data, loading: false });
-    //   console.log('Data updated successfully:', response.data);
-    // })
-    // .catch(error => {
-    //   // // Handle error
-    //   // this.setState({ error: error.message, loading: false });
-    //   // console.error('Error updating data:', error);
-    // });
+  submitExperienceParent = () => {
+       this.stepperRef.current.handleNext();
+       if (this.props.enqueueSnackbar) {
+        this.props.enqueueSnackbar('Experience added successfully', {
+          variant: 'success',
+        }); }
+        this.props.navigate('/education');
   }
+
+  // submitExperience = (row) => {
+  //   debugger;
+  //   if(row.company && row.Designation && row.Location && row.Experience && row.skill && row.task)
+  //   {
+
+  //   }
+  //   else{
+  //     if (row.company === "" || row.company === null) {
+  //       console.log("hi");
+  //       // row.Validations.IsValidAddress_Line_1 = false;
+  //       // ErrorMsg.Address = "Address cannot be empty"
+  //     }
+  //     if(row.Designation === "" || row.Designation === null){
+  //       row.Validations.IsDesignation = false;
+
+  //     }
+  //   }
+
+  //   this.stepperRef.current.handleNext();
+  //  if (this.props.enqueueSnackbar) {
+  //     this.props.enqueueSnackbar('This is a shared notification message!', {
+  //       variant: 'success',
+  //     }); }
+  //   // axios.put(`https://api.example.com/data/`, this.state.summary)
+  //   // .then(response => {
+
+  //   //   this.setState({ data: response.data, loading: false });
+  //   //   console.log('Data updated successfully:', response.data);
+  //   // })
+  //   // .catch(error => {
+  //   //   // // Handle error
+  //   //   // this.setState({ error: error.message, loading: false });
+  //   //   // console.error('Error updating data:', error);
+  //   // });
+  // }
 
   addNewRow = event => {
       let row = {
@@ -423,7 +483,7 @@ class Experience extends React.Component {
         Designation: "",
         Location: "",
         Experience: "",
-        Skills: "",
+        Skills: [],
         Tasks: ""
       }
       this.state.rows.unshift(row)
@@ -459,7 +519,7 @@ class Experience extends React.Component {
           <TableBody>
             {rows.map((row) => (
               <Row key={row.name} row={row} 
-              submitSummary = {this.submitSummary}
+              submitExperienceParent = {this.submitExperienceParent}
               backSummary = {this.backSummary}
               rows = {rows}
               {...this.props}

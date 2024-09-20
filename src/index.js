@@ -7,6 +7,7 @@ import Summary from '../src/components/summary/summary';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import {SharedSnackbarProvider   } from './shared/snackBar';
 import Experience from './components/experience/experience';
+import Education from './components/education/Education'; 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -18,6 +19,7 @@ root.render(
         <Route exact path="/" element={<></>} />
         <Route exact path="/Projects" element={<Summary/>} />
         <Route exact path="/expereince" element={<Experience/>} />
+        <Route exact path="/education" element={<Education/>} />
       </Routes>
     </Router>
     </SharedSnackbarProvider>

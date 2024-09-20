@@ -12,7 +12,7 @@ class LinearStepper extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      activeStep: 0,
+      activeStep: this.props.activeStep,
       skipped: new Set(),
     };
   }
@@ -38,7 +38,7 @@ class LinearStepper extends React.Component {
     }));
   };
 
-  handleBack = () => {
+  handleBack = (num) => {
     this.setState((prevState) => ({
       activeStep: prevState.activeStep - 1,
     }));

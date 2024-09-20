@@ -154,6 +154,9 @@ class Summary extends React.Component {
   constructor(props) {
     super(props);
     this.stepperRef = React.createRef(); // Create a reference to the child component
+    this.state = {
+      activeStep : 0
+    }
   }
 
   backSummary = () => {
@@ -163,7 +166,7 @@ class Summary extends React.Component {
   submitSummary = () => {
     this.stepperRef.current.handleNext();
    if (this.props.enqueueSnackbar) {
-      this.props.enqueueSnackbar('This is a shared notification message!', {
+      this.props.enqueueSnackbar('Summary added successfully', {
         variant: 'success',
       }); }
       this.props.navigate('/expereince');
@@ -185,7 +188,7 @@ class Summary extends React.Component {
       <Card >
       {/* <CardActionArea > */}
         <CardContent sx={{maxWidth: '100%', width: '90%', height: '65%', boxShadow: 10, marginLeft : '4%', marginTop: '3%', position:'fixed', overflowY: 'auto'}}>
-        <LinearStepper ref={this.stepperRef}/>
+        <LinearStepper ref={this.stepperRef} activeStep={this.state.activeStep}/>
       <TableContainer component={Paper} >
         <Table aria-label="collapsible table">
           <TableHead  sx = {{backgroundColor : '#e0e0d1'}} >
