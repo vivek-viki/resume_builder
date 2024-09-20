@@ -73,11 +73,14 @@ class MinHeightTextarea extends Component {
         summary: summary,
         charCount: summary.length
       });
+      
+    this.props.onSummaryChange(summary);
     }
     else {
       this.setState({
         summary: summary
       });
+      
     this.props.onSummaryChange(summary);
     }
   }
