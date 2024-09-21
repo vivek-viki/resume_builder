@@ -20,6 +20,14 @@ import axios from 'axios';
 import {withSharedSnackbar  } from '../../shared/snackBar';
 import LinearStepper from '../../shared/linearStepper';
 import { useNavigate, useParams } from 'react-router-dom';
+import AddRoadIcon from '@mui/icons-material/AddRoad';
+import { useStyles } from '../../shared/styles/defaultStyle';
+import {TextField } from '@mui/material';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
+import InputAdornment from '@mui/material/InputAdornment';
+import Button from '@mui/material/Button';
+
 
 
 function createData(name, calories, fat, carbs, protein, price) {
@@ -50,9 +58,18 @@ class Row extends React.Component {
     super(props);
     this.state = {
       open: true,
-      summary: '',
-      loading: false  
-     
+      Skills: [],
+      New_Skills : [],
+      loading: false,
+      skillData: [
+        { key: 1, label: 'React' },
+        { key: 2, label: 'JavaScript' },
+        { key: 3, label: 'Node.js' },
+        { key: 4, label: 'MongoDB' },
+        { key: 5, label: 'Oracle' },
+        { key: 6, label: 'Spring Boot' },
+        { key: 7, label: 'Spring Framework' }
+      ]
     };
   }
 
@@ -64,30 +81,51 @@ class Row extends React.Component {
     this.setState({ summary: summary });
   }
 
-  // submitSummary = () => {
-  //   console.log('enqueueSnackbar:', this.props.enqueueSnackbar);
-  //  if (this.props.enqueueSnackbar) {
-  //     this.props.enqueueSnackbar('This is a shared notification message!', {
-  //       variant: 'success',
-  //     }); }
-  //   this.setState({ loading: true });
-  //   // axios.put(`https://api.example.com/data/`, this.state.summary)
-  //   // .then(response => {
+  handleDelete = (chipToDelete) => {
+    this.setState((prevState) => ({
+      Skills: prevState.Skills.filter((skill) => skill !== chipToDelete) // Remove the selected skill
+    }));
+  };
 
-  //   //   this.setState({ data: response.data, loading: false });
-  //   //   console.log('Data updated successfully:', response.data);
-  //   // })
-  //   // .catch(error => {
-  //   //   // // Handle error
-  //   //   // this.setState({ error: error.message, loading: false });
-  //   //   // console.error('Error updating data:', error);
-  //   // });
-  // }
+  onSelectSkill = (event) => {
+    const selectedSkill = event.target.innerText;
+
+    this.setState((prevState) => {
+      // Avoid duplicates
+      const updatedSkills = prevState.Skills.includes(selectedSkill)
+        ? prevState.Skills
+        : [...prevState.Skills, selectedSkill];
+      
+      return { Skills: updatedSkills }; // Update Skills directly
+    });
+  };
+
+  handleFieldChange = (fieldName, event) => {
+    debugger;
+    this.setState({ New_Skills : event.target.value });
+  }
+
+  submitSkills = () => {
+
+    this.setState((prevState) => {
+      // Avoid duplicates
+      const updatedSkills = prevState.Skills.includes(this.state.New_Skills)
+        ? prevState.Skills
+        : [...prevState.Skills, this.state.New_Skills];
+      
+      return { Skills: updatedSkills, New_Skills : "" }; // Update Skills directly
+    });
+  }
+
+  submitSkillsData = () => {
+        let Skills = {...this.Skills};
+        if(Skills){
+            this.props.submitSkillsDataParent();
+        }
+  }
 
   render() {
-    const { row } = this.props;
-    const { open , summary } = this.state;
-    const isSummaryEmpty = !summary;
+    const { open , Skills } = this.state;
 
     return (
       <React.Fragment>
@@ -108,6 +146,17 @@ class Row extends React.Component {
           <TableCell align="right"></TableCell>
           <TableCell align="right"></TableCell>
           <TableCell align="right">
+          <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {Skills.map((skill, index) => (
+            <Chip
+              key={index}
+              label={skill}
+            />
+          ))}
+          </Box>
+          </TableCell>
+          <TableCell align="right"></TableCell>
+          <TableCell align="right">
           <Tooltip title="Back">
             <span>
         <IconButton aria-label="fingerprint" color="secondary" disabled='true'>
@@ -115,10 +164,10 @@ class Row extends React.Component {
         </IconButton>
         </span>
         </Tooltip>
-          <Tooltip title={isSummaryEmpty ? "Please Enter Summary" : "Submit"}>
+          <Tooltip title={Skills.length == 0 ? "Please Enter Skills" : "Submit"}>
           <span>
-          <IconButton aria-label="fingerprint" color="success"   disabled={!summary}>
-        <Fingerprint onClick={this.props.submitSummary } 
+          <IconButton aria-label="fingerprint" color="success"   disabled={!Skills.length}>
+        <Fingerprint onClick={this.submitSkillsData } 
         />
       </IconButton>
       </span>
@@ -127,14 +176,55 @@ class Row extends React.Component {
           </TableCell>
         </TableRow>
         <TableRow>
-          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6} className={this.props.classes.tableForm}>
+          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8} className={this.props.classes.tableForm}>
             <Collapse in={open} timeout="auto" unmountOnExit>
+                &nbsp;
+            <Stack direction="row" spacing={1}>
+        {this.state.skillData.map((chip) => (
+        <Chip
+          key={chip.key}
+          label={chip.label}
+          onClick={(chip)=>this.onSelectSkill(chip)}
+        />
+      ))}
+         </Stack>
+         <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {this.state.Skills.map((skill, index) => (
+            <Chip
+              key={index}
+              label={skill}
+              onDelete={() => this.handleDelete(skill)} // Handle deletion
+            />
+          ))}
+        </Box>
               <Box sx={{ margin: 1 }}>
-                <MinHeightTextarea onSummaryChange={this.handleSummaryChange} 
-                text={"Please Enter Summary"}
-                enable = {true}
-                {...this.props}
-                />
+              <TextField
+            // error={!this.state.row.Validations.IsSkills}
+            required
+            id="component-error"
+            variant="standard"
+            label="Skills"
+            sx={{ width: '100%'}}
+            value={this.state.New_Skills}
+            // helperText={ErrorMsg.College}
+            onChange={(e) => this.handleFieldChange("Skills", e)}
+            inputProps={{ maxLength: 50 }}
+            InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={this.submitSkills}
+                      disabled = {this.state.New_Skills == ""}  // Define what happens on click
+                      sx={{ transform: 'translateY(-7px)' }}
+                    >
+                      Add Skills
+                    </Button>
+                  </InputAdornment>
+                ),
+              }}
+          />
               </Box>
             </Collapse>
           </TableCell>
@@ -150,12 +240,12 @@ const rows = [
   createData(),
 ];
 
-class Summary extends React.Component {
+class Skills extends React.Component {
   constructor(props) {
     super(props);
     this.stepperRef = React.createRef(); // Create a reference to the child component
     this.state = {
-      activeStep : 0
+      activeStep : 3
     }
   }
 
@@ -163,13 +253,13 @@ class Summary extends React.Component {
     this.stepperRef.current.handleBack();
   }
 
-  submitSummary = () => {
+  submitSkillsDataParent = () => {
     this.stepperRef.current.handleNext();
    if (this.props.enqueueSnackbar) {
-      this.props.enqueueSnackbar('Summary added successfully', {
+      this.props.enqueueSnackbar('Skills added successfully', {
         variant: 'success',
       }); }
-      this.props.navigate('/expereince');
+      this.props.navigate('/certificates');
     // axios.put(`https://api.example.com/data/`, this.state.summary)
     // .then(response => {
 
@@ -193,18 +283,17 @@ class Summary extends React.Component {
         <Table aria-label="collapsible table">
           <TableHead  sx = {{backgroundColor : '#e0e0d1'}} >
             <TableRow >
-              <TableCell ></TableCell>
-              <TableCell ></TableCell>
-              <TableCell ></TableCell>
-              <TableCell >SUMMARY</TableCell>
-              <TableCell ></TableCell>
-              <TableCell ></TableCell>
+            <TableCell colSpan={8} align="center"  className={` ${this.props.classes.tableHeaderCells}`}>
+      <Tooltip title="Skills">
+        <AddRoadIcon sx={{ color: 'grey' }} />
+      </Tooltip>
+    </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row) => (
               <Row key={row.name} row={row} 
-              submitSummary = {this.submitSummary}
+              submitSkillsDataParent = {this.submitSkillsDataParent}
               backSummary = {this.backSummary}
               {...this.props}
               />
@@ -223,9 +312,9 @@ function WithNavigate(props) {
   const navigate = useNavigate();
   // const {t} = useTranslation();
   const params = useParams();
-  // const classes = useStyles();
+  const classes = useStyles();
   return (
-    <Summary {...props} routeParams={params} navigate={navigate} />
+    <Skills {...props} classes={classes} routeParams={params} navigate={navigate} />
   );
 }
 

@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-route
 import {SharedSnackbarProvider   } from './shared/snackBar';
 import Experience from './components/experience/experience';
 import Education from './components/education/Education'; 
+import Skills from './components/skills/skills';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -20,6 +21,7 @@ root.render(
         <Route exact path="/Projects" element={<Summary/>} />
         <Route exact path="/expereince" element={<Experience/>} />
         <Route exact path="/education" element={<Education/>} />
+        <Route exact path="/skills" element={<Skills/>} />
       </Routes>
     </Router>
     </SharedSnackbarProvider>
