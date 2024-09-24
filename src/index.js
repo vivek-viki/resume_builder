@@ -9,6 +9,9 @@ import {SharedSnackbarProvider   } from './shared/snackBar';
 import Experience from './components/experience/experience';
 import Education from './components/education/Education'; 
 import Skills from './components/skills/skills';
+import Certificates from './components/certificates/certificates';
+import Projects from './components/projects/projects';
+import Personal from './components/personal/personal';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -18,10 +21,14 @@ root.render(
     <Header />
       <Routes>
         <Route exact path="/" element={<></>} />
-        <Route exact path="/Projects" element={<Summary/>} />
+        <Route exact path="/personal" element={<Personal/>}/>
+        <Route exact path="/links" element={<Summary/>} />
         <Route exact path="/expereince" element={<Experience/>} />
         <Route exact path="/education" element={<Education/>} />
         <Route exact path="/skills" element={<Skills/>} />
+        <Route exact path="/certificates" element={<Certificates/>} />
+        <Route exact path="/projects" element={<Projects/>} />
+        
       </Routes>
     </Router>
     </SharedSnackbarProvider>

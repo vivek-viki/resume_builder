@@ -42,6 +42,7 @@ class Row extends React.Component {
       loading: false,
       row : {
         open: props.row.Id === 0 ? true : false,
+        Id : props.row.Id,
         College: props.row.College,
         Course: props.row.Course,
         Program: props.row.Program,
@@ -75,7 +76,7 @@ class Row extends React.Component {
   handleClick = (event) => {
     let row = { ...this.state.row }
     row.open = event;
-    if (row.Id !== 0)
+    // if (row.Id !== 0)
     this.setState({ row  });
   };
 
@@ -102,13 +103,20 @@ class Row extends React.Component {
   }
   
   submitEducation = () => {
-    debugger;
     let row = {...this.state.row};
     let ErrorMsg = {...this.state.ErrorMsg};
     debugger;
     if(row.College && row.Course && row.Program && row.StartDate && row.EndDate && row.CGPA && row.Specalization)
     {
-      this.props.submitEducationParent();
+      row.Id = 1;
+      if (this.props.enqueueSnackbar) {
+        this.props.enqueueSnackbar('Education added successfully', {
+          variant: 'success',
+          row
+        }); }
+      this.props.submitEducationParent(row);
+      row.open = false; // Set open to false to collapse the row
+      this.setState({ row }); // Update the state to reflect the change
     }
     else{
       if (row.College === "" || row.College === null) {
@@ -158,10 +166,10 @@ class Row extends React.Component {
               {row.open ? <Tooltip title="Close"><KeyboardArrowUpIcon /></Tooltip> : <Tooltip title="Expand"><KeyboardArrowDownIcon /></Tooltip>}
             </IconButton>
           </TableCell>
-          <TableCell  className={this.props.classes.tableCell}>{row.College}</TableCell>
-          <TableCell  className={this.props.classes.tableCell}>{row.Course}</TableCell>
-          <TableCell  className={this.props.classes.tableCell}>{row.Program}</TableCell>
-          <TableCell  className={this.props.classes.tableCell}>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.College}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.Course}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.Program}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> 
           <Chip
               label={row.StartDate ?
                 <Moment format={"DD-MMM-YYYY"}>
@@ -169,27 +177,29 @@ class Row extends React.Component {
                 </Moment>
                 : ''}
               variant="filled" />
+              </div>
           </TableCell>  
-          <TableCell  className={this.props.classes.tableCell}>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> 
           <Chip
               label={row.EndDate ?
-                <Moment format={"DD-MMM-YYYY hh:mma"}>
+                <Moment format={"DD-MMM-YYYY"}>
                   {row.EndDate}
                 </Moment>
                 : ''}
               variant="filled" />
+              </div>
           </TableCell>
-          <TableCell className={this.props.classes.tableCell}>{row.CGPA}</TableCell>
-          <TableCell  className={this.props.classes.tableCell}>{row.Specalization}</TableCell>
-          <TableCell align="right">
-          <Tooltip title="Back">
+          <TableCell className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.CGPA}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.Specalization}</div></TableCell>
+          <TableCell align="right" className={this.props.classes.tableCell}>
+          <Tooltip title="Delete">
             <span>
         <IconButton aria-label="fingerprint" color="secondary">
-          <Fingerprint onClick={this.props.backSummary } />
+          <Fingerprint onClick={() => this.props.DeleteEducation(row.Id)} />
         </IconButton>
         </span>
         </Tooltip>
-          <Tooltip title={"Submit"}>
+          <Tooltip title={"Save"}>
           <span>
           <IconButton aria-label="fingerprint" color="success" >
         <Fingerprint onClick={ this.submitEducation} 
@@ -283,9 +293,19 @@ class Row extends React.Component {
             label="CGPA"
             sx={{ width: 250 }}
             value={row.CGPA}
-            helperText={ErrorMsg.IsCGPA}
-            onChange={(e) => this.handleFieldChange("CGPA", e)}
-            inputProps={{ maxLength: 15 }}
+            // helperText={ErrorMsg.CGPA}
+            onChange={(e) => {
+              const { value } = e.target;
+              // Allow input only if it's a number or empty (to allow deletion)
+              if (/^\d*\.?\d*$/.test(value)) {
+                this.handleFieldChange("CGPA", e);  // Update only if valid
+              }
+            }}
+            inputProps={{
+              maxLength: 10, 
+              inputMode: 'numeric',  // This prompts mobile devices to show a numeric keypad
+              pattern: '[0-9]*'      // This ensures only digits are accepted
+            }}
           />
         </div>
         <div className="col-md-2 pull-left">
@@ -297,7 +317,7 @@ class Row extends React.Component {
             label="Specalization"
             sx={{ width: 250 }}
             value={row.Specalization}
-            helperText={ErrorMsg.IsSpecalization}
+            // helperText={ErrorMsg.Specalization}
             onChange={(e) => this.handleFieldChange("Specalization", e)}
             inputProps={{ maxLength: 15 }}
           />
@@ -319,26 +339,31 @@ class Row extends React.Component {
 class Education extends React.Component {
     constructor(props) {
       super(props);
-      this.stepperRef = React.createRef();
       this.state = {
         rows : [],
-        activeStep : 2
-      } // Create a reference to the child component
+        activeStep : 3
+      } 
     }
   
     backSummary = () => {
       this.stepperRef.current.handleBack();
     }
-  
-    submitEducationParent = () => {
-         this.stepperRef.current.handleNext();
-         if (this.props.enqueueSnackbar) {
-          this.props.enqueueSnackbar('Education added successfully', {
-            variant: 'success',
-          }); }
-          this.props.navigate('/skills');
+
+    submitEducation = () => {
+      this.props.navigate('/skills');
     }
   
+    submitEducationParent = (row) => {
+      let rows = [...this.state.rows];
+      rows[0].Id = row.Id;
+          this.setState({rows});
+    }
+  
+    DeleteEducation = (id) => {
+      this.setState((prevState) => ({
+        rows: prevState.rows.filter(row => row.Id !== id) // Filter out the row with the matching id
+      }));
+    };
     // submitExperience = (row) => {
     //   debugger;
     //   if(row.company && row.Designation && row.Location && row.Experience && row.skill && row.task)
@@ -400,22 +425,35 @@ class Education extends React.Component {
         <Card >
         {/* <CardActionArea > */}
           <CardContent sx={{maxWidth: '100%', width: '93%', height: '65%', boxShadow: 10, marginLeft : '2%', marginTop: '3%', position:'fixed', overflowY: 'auto'}}>
-          <LinearStepper ref={this.stepperRef} activeStep={this.state.activeStep}/>
+          <LinearStepper activeStep={this.state.activeStep}/>
           <TableContainer component={Paper} >
         <Table  aria-label="collapsible table">
           <TableHead className={` ${this.props.classes.tableHeaderRow}`}>
             <TableRow >
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`} > <Tooltip title="College"><SchoolIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Course"><AutoStoriesIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Program"><LocalLibraryIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="StartDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="EndDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="CGPA"><StarIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Specalization"><FolderSpecialIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`} ><div className={this.props.classes.iconWrapper}> <Tooltip title="College"><SchoolIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Course"><AutoStoriesIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Program"><LocalLibraryIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="StartDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="EndDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="CGPA"><StarIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Specalization"><FolderSpecialIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               {/* <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Tasks"></Tooltip></TableCell> */}
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}> 
-            <Button variant="contained" onClick={(e) => this.addNewRow(e)} className={this.props.classes.containedbutton}>add education</Button>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <Button variant="contained"
+               onClick={(e) => this.addNewRow(e)} 
+              className={this.props.classes.containedbutton}
+              disabled = {(rows[0]?.Id === 0)}
+              >
+                add education</Button>
+    <Tooltip title={"Next"}>
+    <IconButton aria-label="fingerprint" color="success"  disabled={!rows.length || rows[0]?.Id === 0}>
+        <Fingerprint onClick={ this.submitEducation} 
+        />
+      </IconButton>
+      </Tooltip>
+  </div>
           </TableCell>
             </TableRow>
           </TableHead>
@@ -423,7 +461,7 @@ class Education extends React.Component {
             {rows.map((row) => (
               <Row key={row.name} row={row} 
               submitEducationParent = {this.submitEducationParent}
-              backSummary = {this.backSummary}
+              DeleteEducation = {this.DeleteEducation}
               rows = {rows}
               {...this.props}
               />

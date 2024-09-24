@@ -42,6 +42,7 @@ class Row extends React.Component {
       task : '',
       row : {
         open: props.row.Id === 0 ? true : false,
+        Id : props.row.Id,
         Company: props.row.Company,
         Designation: props.row.Designation,
         Location: props.row.Location,
@@ -81,7 +82,7 @@ class Row extends React.Component {
   handleClick = (event) => {
     let row = { ...this.state.row }
     row.open = event;
-    if (row.Id !== 0)
+    // if (row.Id !== 0)
     this.setState({ row  });
   };
 
@@ -221,10 +222,17 @@ class Row extends React.Component {
     debugger;
     let row = {...this.state.row};
     let ErrorMsg = {...this.state.ErrorMsg};
-    debugger;
     if(row.Company && row.Designation && row.Location && row.Experience && row.Skills.length > 0 && row.Tasks)
     {
-      this.props.submitExperienceParent();
+      row.Id = 1;
+      if (this.props.enqueueSnackbar) {
+        this.props.enqueueSnackbar('Experience added successfully', {
+          variant: 'success',
+          row
+        }); }
+      this.props.submitExperienceParent(row);
+      row.open = false; // Set open to false to collapse the row
+      this.setState({ row }); // Update the state to reflect the change
     }
     else{
       if (row.Company === "" || row.Company === null) {
@@ -233,23 +241,23 @@ class Row extends React.Component {
       }
       if(row.Designation === "" || row.Designation === null){
         row.Validations.IsDesignation = false;
-        ErrorMsg.Designation = "Address cannot be empty";
+        ErrorMsg.Designation = "Designation cannot be empty";
       }
       if(row.Location === "" || row.Location === null){
         row.Validations.IsLocation = false;
-        ErrorMsg.Location = "Address cannot be empty";
+        ErrorMsg.Location = "Location cannot be empty";
       }
       if(row.Experience === "" || row.Experience === null){
         row.Validations.IsExperience = false;
-        ErrorMsg.Experience = "Address cannot be empty";
+        ErrorMsg.Experience = "Experience cannot be empty";
       }
       if(row.Skills.length === 0){
         row.Validations.IsSkills = false;
-        ErrorMsg.Skills = "Address cannot be empty";
+        ErrorMsg.Skills = "Skills cannot be empty";
       }
       if(row.Tasks === "" || row.Tasks === null){
         row.Validations.IsTasks = false;
-        ErrorMsg.Tasks = "Address cannot be empty";
+        ErrorMsg.Tasks = "Tasks cannot be empty";
       }
       this.setState({ row });
     }
@@ -258,7 +266,7 @@ class Row extends React.Component {
 
   render() {
     const { row } = this.state;
-debugger;
+    debugger;
     return (
       <React.Fragment>
         
@@ -271,11 +279,11 @@ debugger;
               {row.open ? <Tooltip title="Close"><KeyboardArrowUpIcon /></Tooltip> : <Tooltip title="Expand"><KeyboardArrowDownIcon /></Tooltip>}
             </IconButton>
           </TableCell>
-          <TableCell  className={this.props.classes.tableCell}>{row.Company}</TableCell>
-          <TableCell  className={this.props.classes.tableCell}>{row.Designation}</TableCell>
-          <TableCell  className={this.props.classes.tableCell}>{row.Location}</TableCell>
-          <TableCell  className={this.props.classes.tableCell}>{row.Experience}</TableCell>
-          <TableCell className={this.props.classes.tableCell}>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Company}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Designation}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Location}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Experience}</div></TableCell>
+          <TableCell className={this.props.classes.tableCell}> 
           <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {row.Skills.map((skill, index) => (
             <Chip
@@ -285,16 +293,16 @@ debugger;
           ))}
           </Box>
             </TableCell>
-          <TableCell  className={this.props.classes.tableCell}>{row.Tasks}</TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Tasks}</div></TableCell>
           <TableCell align="right">
-          <Tooltip title="Back">
+          <Tooltip title="Delete">
             <span>
         <IconButton aria-label="fingerprint" color="secondary">
-          <Fingerprint onClick={this.props.backSummary } />
+          <Fingerprint onClick={() => this.props.DeleteExperience(row.Id)} />
         </IconButton>
         </span>
         </Tooltip>
-          <Tooltip title={"Submit"}>
+          <Tooltip title={"Save"}>
           <span>
           <IconButton aria-label="fingerprint" color="success" >
         <Fingerprint onClick={ this.submitExperience} 
@@ -420,24 +428,25 @@ debugger;
 class Experience extends React.Component {
   constructor(props) {
     super(props);
-    this.stepperRef = React.createRef();
     this.state = {
       rows : [],
-      activeStep : 1
-    } // Create a reference to the child component
+      activeStep : 2
+    } 
   }
 
   backSummary = () => {
     this.stepperRef.current.handleBack();
   }
 
-  submitExperienceParent = () => {
-       this.stepperRef.current.handleNext();
-       if (this.props.enqueueSnackbar) {
-        this.props.enqueueSnackbar('Experience added successfully', {
-          variant: 'success',
-        }); }
-        this.props.navigate('/education');
+  submitExperience = () => {
+    this.props.navigate('/education');
+  }
+
+  submitExperienceParent = (row) => {
+    let rows = [...this.state.rows];
+    rows[0].Id = row.Id;
+        this.setState({rows});
+        
   }
 
   // submitExperience = (row) => {
@@ -493,6 +502,13 @@ class Experience extends React.Component {
       });
     }
 
+    DeleteExperience = (id) => {
+      debugger;
+      this.setState((prevState) => ({
+        rows: prevState.rows.filter(row => row.Id !== id) // Filter out the row with the matching id
+      }));
+    };
+
 
   render() {
    const {rows} = this.state;
@@ -500,20 +516,35 @@ class Experience extends React.Component {
       <Card >
       {/* <CardActionArea > */}
         <CardContent sx={{maxWidth: '100%', width: '93%', height: '65%', boxShadow: 10, marginLeft : '2%', marginTop: '3%', position:'fixed', overflowY: 'auto'}}>
-        <LinearStepper ref={this.stepperRef} activeStep={this.state.activeStep}/>
+        <LinearStepper activeStep={this.state.activeStep}/>
       <TableContainer component={Paper} >
         <Table  aria-label="collapsible table">
           <TableHead className={` ${this.props.classes.tableHeaderRow}`}>
             <TableRow >
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`} > <Tooltip title="Company"><BusinessIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Designation"><ContactEmergencyIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Location"><GpsFixedIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Experience"><WorkHistoryIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Skills"><AddRoadIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Tasks"><TaskAltIcon sx={{ color: 'grey' }}/></Tooltip></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`} ><div className={this.props.classes.iconWrapper}> <Tooltip title="Company"><BusinessIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Designation"><ContactEmergencyIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Location"><GpsFixedIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Experience"><WorkHistoryIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Skills"><AddRoadIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Tasks"><TaskAltIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}> 
-            <Button variant="contained" onClick={(e) => this.addNewRow(e)} className={this.props.classes.containedbutton}>add expereince</Button>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+    <Button
+      variant="contained"
+      onClick={(e) => this.addNewRow(e)}
+      className={this.props.classes.containedbutton}
+      disabled = {(rows[0]?.Id === 0)}
+    >
+      Add Experience
+    </Button>
+    <Tooltip title={"Next"}>
+    <IconButton aria-label="fingerprint" color="success"  disabled={!rows.length || rows[0]?.Id === 0}>
+        <Fingerprint onClick={ this.submitExperience} 
+        />
+      </IconButton>
+      </Tooltip>
+  </div>
           </TableCell>
             </TableRow>
           </TableHead>
@@ -521,7 +552,7 @@ class Experience extends React.Component {
             {rows.map((row) => (
               <Row key={row.name} row={row} 
               submitExperienceParent = {this.submitExperienceParent}
-              backSummary = {this.backSummary}
+              DeleteExperience = {this.DeleteExperience}
               rows = {rows}
               {...this.props}
               />
