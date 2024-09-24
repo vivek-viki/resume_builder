@@ -140,12 +140,7 @@ class Row extends React.Component {
               {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
             </IconButton>
           </TableCell>
-          <TableCell component="th" scope="row">
-          </TableCell>
-          <TableCell align="right"></TableCell>
-          <TableCell align="right"></TableCell>
-          <TableCell align="right"></TableCell>
-          <TableCell align="right">
+          <TableCell className={this.props.classes.tableCell} align="center"><div className={this.props.classes.iconWrapper}> 
           <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {Skills.map((skill, index) => (
             <Chip
@@ -154,16 +149,9 @@ class Row extends React.Component {
             />
           ))}
           </Box>
+          </div>
           </TableCell>
-          <TableCell align="right"></TableCell>
           <TableCell align="right">
-          <Tooltip title="Back">
-            <span>
-        <IconButton aria-label="fingerprint" color="secondary" disabled='true'>
-          <Fingerprint onClick={this.props.backSummary } />
-        </IconButton>
-        </span>
-        </Tooltip>
           <Tooltip title={Skills.length == 0 ? "Please Enter Skills" : "Submit"}>
           <span>
           <IconButton aria-label="fingerprint" color="success"   disabled={!Skills.length}>
@@ -243,9 +231,8 @@ const rows = [
 class Skills extends React.Component {
   constructor(props) {
     super(props);
-    this.stepperRef = React.createRef(); // Create a reference to the child component
     this.state = {
-      activeStep : 3
+      activeStep : 4
     }
   }
 
@@ -254,7 +241,6 @@ class Skills extends React.Component {
   }
 
   submitSkillsDataParent = () => {
-    this.stepperRef.current.handleNext();
    if (this.props.enqueueSnackbar) {
       this.props.enqueueSnackbar('Skills added successfully', {
         variant: 'success',
@@ -277,13 +263,13 @@ class Skills extends React.Component {
     return (
       <Card >
       {/* <CardActionArea > */}
-        <CardContent sx={{maxWidth: '100%', width: '90%', height: '65%', boxShadow: 10, marginLeft : '4%', marginTop: '3%', position:'fixed', overflowY: 'auto'}}>
-        <LinearStepper ref={this.stepperRef} activeStep={this.state.activeStep}/>
+      <CardContent sx={{maxWidth: '100%', width: '93%', height: '65%', boxShadow: 10, marginLeft : '2%', marginTop: '3%', position:'fixed', overflowY: 'auto'}}>
+        <LinearStepper  activeStep={this.state.activeStep}/>
       <TableContainer component={Paper} >
         <Table aria-label="collapsible table">
           <TableHead  sx = {{backgroundColor : '#e0e0d1'}} >
             <TableRow >
-            <TableCell colSpan={8} align="center"  className={` ${this.props.classes.tableHeaderCells}`}>
+            <TableCell colSpan={8} align="center"  className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}> </div>
       <Tooltip title="Skills">
         <AddRoadIcon sx={{ color: 'grey' }} />
       </Tooltip>

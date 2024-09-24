@@ -13,15 +13,17 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import MinHeightTextarea from '../../shared/textArea';
 import Fingerprint from '@mui/icons-material/Fingerprint';
 import Tooltip from '@mui/material/Tooltip';
 import axios from 'axios';
 import {withSharedSnackbar  } from '../../shared/snackBar';
 import LinearStepper from '../../shared/linearStepper';
 import { useNavigate, useParams } from 'react-router-dom';
+import GppGoodIcon from '@mui/icons-material/GppGood';
 import { useStyles } from '../../shared/styles/defaultStyle';
-import BookIcon from '@mui/icons-material/Book';
+import Chip from '@mui/material/Chip';
+import InputFileUpload from '../../shared/uploaddoc';
+
 
 function createData(name, calories, fat, carbs, protein, price) {
   return {
@@ -51,9 +53,9 @@ class Row extends React.Component {
     super(props);
     this.state = {
       open: true,
-      summary: '',
-      loading: false  
-     
+      New_Skills : [],
+      loading: false,
+      selection : [],
     };
   }
 
@@ -65,30 +67,79 @@ class Row extends React.Component {
     this.setState({ summary: summary });
   }
 
-  // submitSummary = () => {
-  //   console.log('enqueueSnackbar:', this.props.enqueueSnackbar);
-  //  if (this.props.enqueueSnackbar) {
-  //     this.props.enqueueSnackbar('This is a shared notification message!', {
-  //       variant: 'success',
-  //     }); }
-  //   this.setState({ loading: true });
-  //   // axios.put(`https://api.example.com/data/`, this.state.summary)
-  //   // .then(response => {
+  handleDelete = (chipToDelete) => {
+    this.setState((prevState) => ({
+      Skills: prevState.Skills.filter((skill) => skill !== chipToDelete) // Remove the selected skill
+    }));
+  };
 
-  //   //   this.setState({ data: response.data, loading: false });
-  //   //   console.log('Data updated successfully:', response.data);
-  //   // })
-  //   // .catch(error => {
-  //   //   // // Handle error
-  //   //   // this.setState({ error: error.message, loading: false });
-  //   //   // console.error('Error updating data:', error);
-  //   // });
-  // }
+  handleCertificateDelete = (fileNameToDelete) => {
+    // Filter out the file with the matching file name
+    const updatedSelection = this.state.selection.filter(
+      (chip) => chip.fileName !== fileNameToDelete
+    );
+  
+    // Update the state with the new selection array
+    this.setState({ selection: updatedSelection });
+  };
+
+  onSelectSkill = (event) => {
+    const selectedSkill = event.target.innerText;
+
+    this.setState((prevState) => {
+      // Avoid duplicates
+      const updatedSkills = prevState.Skills.includes(selectedSkill)
+        ? prevState.Skills
+        : [...prevState.Skills, selectedSkill];
+      
+      return { Skills: updatedSkills }; // Update Skills directly
+    });
+  };
+
+  handleFieldChange = (fieldName, event) => {
+    debugger;
+    this.setState({ New_Skills : event.target.value });
+  }
+
+  submitSkills = () => {
+
+    this.setState((prevState) => {
+      // Avoid duplicates
+      const updatedSkills = prevState.Skills.includes(this.state.New_Skills)
+        ? prevState.Skills
+        : [...prevState.Skills, this.state.New_Skills];
+      
+      return { Skills: updatedSkills, New_Skills : "" }; // Update Skills directly
+    });
+  }
+
+  submitCertificates = () => {
+        let selection = {...this.state};
+        if(selection){
+            this.props.submitCertificatesParent();
+        }
+  }
+
+  handleFieldChange = (files) => {
+    let selection = {...this.state};
+    const updatedFiles = files.map((file) => ({
+        file: file.file,                  // Store the actual file object if needed
+        fileName: file.fileName,          // Store the file name
+        fileExtension: file.fileExtension // Store the file extension
+    }));
+
+    selection = updatedFiles;
+
+    this.setState({ selection });
+  }
+
+  handleFileView = (file) => {
+    const fileURL = URL.createObjectURL(file);
+    window.open(fileURL, '_blank'); // Open the file in a new tab
+  };
 
   render() {
-    const { row } = this.props;
-    const { open , summary } = this.state;
-    const isSummaryEmpty = !summary;
+    const { open,selection } = this.state;
 
     return (
       <React.Fragment>
@@ -103,12 +154,27 @@ class Row extends React.Component {
               {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
             </IconButton>
           </TableCell>
-          {/* <TableCell className={this.props.classes.tableCell}></TableCell> */}
-          {/* <TableCell className={this.props.classes.tableCell}></TableCell> */}
-          <TableCell className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{summary}</div></TableCell>
-          {/* <TableCell className={this.props.classes.tableCell}></TableCell> */}
-          {/* <TableCell className={this.props.classes.tableCell}></TableCell> */}
-          <TableCell className={this.props.classes.tableCell} align = "right">
+          <TableCell component="th" scope="row">
+          </TableCell>
+          <TableCell align="right"></TableCell>
+          <TableCell align="right"></TableCell>
+          <TableCell align="right"></TableCell>
+          <TableCell align="right">
+          <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {this.state.selection.map((chip) => (
+       <Chip sx={{ marginLeft: "1%" }} 
+       className={`mx-3 ${this.props.classes.formField}`} 
+       variant="outlined" 
+       hidden={!chip.fileName} 
+       label={chip.fileName} 
+       onClick={() => this.handleFileView(chip.file)}
+       color="primary" />
+      ))}
+          
+          </Box>
+          </TableCell>
+          <TableCell align="right"></TableCell>
+          <TableCell align="right">
           {/* <Tooltip title="Back">
             <span>
         <IconButton aria-label="fingerprint" color="secondary" disabled='true'>
@@ -116,10 +182,10 @@ class Row extends React.Component {
         </IconButton>
         </span>
         </Tooltip> */}
-          <Tooltip title={isSummaryEmpty ? "Please Enter Summary" : "Submit"}>
+          <Tooltip title={selection.length == 0 ? "Please upload Certificates": "Submit"}>
           <span>
-          <IconButton aria-label="fingerprint" color="success"   disabled={!summary}>
-        <Fingerprint onClick={this.props.submitSummary } 
+          <IconButton aria-label="fingerprint" color="success"   disabled={!selection.length}>
+        <Fingerprint onClick={this.submitCertificates } 
         />
       </IconButton>
       </span>
@@ -128,15 +194,16 @@ class Row extends React.Component {
           </TableCell>
         </TableRow>
         <TableRow>
-          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7} className={this.props.classes.tableForm}>
+          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8} className={this.props.classes.tableForm}>
             <Collapse in={open} timeout="auto" unmountOnExit>
-              <Box sx={{ margin: 1 }}>
-                <MinHeightTextarea onSummaryChange={this.handleSummaryChange} 
-                text={"Please Enter Summary"}
-                enable = {true}
-                {...this.props}
-                />
-              </Box>
+                &nbsp;
+            <InputFileUpload 
+            handleFileChange = {this.handleFieldChange}
+            {...this.props}/>
+              {this.state.selection.map((chip) => (
+       <Chip sx={{ marginLeft: "1%" }} className={`mx-3 ${this.props.classes.formField}`} variant="outlined" hidden={!chip.fileName} label={chip.fileName} color="primary" onDelete={() => this.handleCertificateDelete(chip.fileName)}/>
+      ))}
+          
             </Collapse>
           </TableCell>
         </TableRow>
@@ -151,11 +218,11 @@ const rows = [
   createData(),
 ];
 
-class Summary extends React.Component {
+class Certificates extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      activeStep : 1
+      activeStep : 5
     }
   }
 
@@ -163,12 +230,12 @@ class Summary extends React.Component {
     this.stepperRef.current.handleBack();
   }
 
-  submitSummary = () => {
+  submitCertificatesParent = () => {
    if (this.props.enqueueSnackbar) {
-      this.props.enqueueSnackbar('Summary added successfully', {
+      this.props.enqueueSnackbar('Certificates added successfully', {
         variant: 'success',
       }); }
-      this.props.navigate('/expereince');
+      this.props.navigate('/projects');
     // axios.put(`https://api.example.com/data/`, this.state.summary)
     // .then(response => {
 
@@ -192,18 +259,17 @@ class Summary extends React.Component {
         <Table aria-label="collapsible table">
           <TableHead  sx = {{backgroundColor : '#e0e0d1'}} >
             <TableRow >
-            <TableCell colSpan={8} align="center"  className={` ${this.props.classes.tableHeaderCells}`}> <div className={this.props.classes.iconWrapper}>
-      <Tooltip title="Summary">
-        <BookIcon sx={{ color: 'grey' }} />
+            <TableCell colSpan={8} align="center"  className={` ${this.props.classes.tableHeaderCells}`}>
+      <Tooltip title="Certificates">
+        <GppGoodIcon sx={{ color: 'grey' }} />
       </Tooltip>
-      </div>
-      </TableCell>
+    </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row) => (
               <Row key={row.name} row={row} 
-              submitSummary = {this.submitSummary}
+              submitCertificatesParent = {this.submitCertificatesParent}
               backSummary = {this.backSummary}
               {...this.props}
               />
@@ -224,7 +290,7 @@ function WithNavigate(props) {
   const params = useParams();
   const classes = useStyles();
   return (
-    <Summary {...props} classes={classes} routeParams={params} navigate={navigate} />
+    <Certificates {...props} classes={classes} routeParams={params} navigate={navigate} />
   );
 }
 

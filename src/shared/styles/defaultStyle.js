@@ -20,8 +20,17 @@ export const useStyles = makeStyles((theme) => ({
         fontFamily: 'inherit',
         backgroundColor: '#e0e0d1',
         fontSize:'small',
-        color: 'white'
+        color: 'white',
+        padding: '8px', 
+        textAlign: 'center',
     },
+    iconWrapper: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%',
+      },
     tableForm:{
         backgroundColor: '#f7f7f7',
         lineHeight:'5',

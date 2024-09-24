@@ -45,7 +45,7 @@ class ResponsiveAppBar extends Component {
 
   handleCloseNavMenuLinks = (page) => {
     if (page === 'Projects') {
-      this.props.navigate('/Projects');
+      this.props.navigate('/personal');
     }
     this.handleCloseNavMenu();
   };
