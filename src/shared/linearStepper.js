@@ -8,7 +8,7 @@ import { useStyles } from '../shared/styles/defaultStyle';
 import { useNavigate, useParams } from 'react-router-dom';
 
 
-const steps = ['Personal Details','Summary', 'Experenice','Education', 'Skills','certificates','Projects'];
+const steps = ['Personal Details','Summary', 'Experenice','Education', 'Skills','Language','Certificates','Projects'];
 
 class LinearStepper extends React.Component {
   constructor(props) {
@@ -86,6 +86,9 @@ class LinearStepper extends React.Component {
       this.props.navigate('/skills');
     }
     if(stepIndex == 5){
+      this.props.navigate('/language');
+    }
+    if(stepIndex == 6){
       this.props.navigate('/certificates');
     }
     this.setState({ activeStep: stepIndex });

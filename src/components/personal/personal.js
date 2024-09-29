@@ -30,8 +30,7 @@ import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import ContactEmergencyIcon from '@mui/icons-material/ContactEmergency';
 import HomeIcon from '@mui/icons-material/Home';
 import LinkIcon from '@mui/icons-material/Link';
-import DatePicker from '../../shared/datePicker';
-import Moment from "react-moment";
+import Loading from "../../shared/loading";
 
 class Row extends React.Component {
   constructor(props) {
@@ -41,21 +40,21 @@ class Row extends React.Component {
       loading: false,
       row : {
         open: true,
-        Id : props.row.Id,
-        Name: props.row.Name,
-        Designation: props.row.Designation,
-        Number: props.row.Number,
-        MailId: props.row.MailId,
-        Address : props.row.Address,
-        Links: props.row.Links,
-        Validations: {
-          "IsName": true,
-          "IsDesignation": true,
-          "IsNumber": true,
-          "IsMailId": true,
-          "IsAddress": true,
-          "IsLinks": true,
-        }
+        id : props.row.id,
+        name: props.row.name,
+        designation: props.row.designation,
+        number: props.row.number,
+        mailId: props.row.mailId,
+        address : props.row.address,
+        links: props.row.links,
+      },
+      Validations: {
+        "IsName": true,
+        "IsDesignation": true,
+        "IsNumber": true,
+        "IsMailId": true,
+        "IsAddress": true,
+        "IsLinks": true,
       },
       ErrorMsg: {
         Name: "",
@@ -69,21 +68,41 @@ class Row extends React.Component {
     
   }
 
+  componentDidMount(){
+    this.setState({ loading: true })
+    axios.post(`http://localhost:5149/details/getDetails/1`)
+    .then(response => {
+      this.setState({ row: response.data, loading: false });
+        this.setState({ loading: false })
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+    .finally(() => {
+      this.setState({ loading: false });
+    });
+  }
+
   handleClick = () => {
     this.setState({ open: !this.state.open });
   };
 
 
   handleFieldChange = (fieldName, event) => {
+    debugger;
     let row = { ...this.state.row };
+    let Validations = { ...this.state.Validations };
     let ErrorMsg = { ...this.state.ErrorMsg };
     row[fieldName] = event.target.value.trimStart();
   
     if (event.target.value) {
-      row.Validations[`Is${fieldName}`] = true;
+      Validations[`Is${fieldName}`] = true;
       ErrorMsg[fieldName] = "";
     } else {
-      row.Validations[`Is${fieldName}`] = false;
+      Validations[`Is${fieldName}`] = false;
       ErrorMsg[fieldName] = `${fieldName} cannot be empty`;
     }
   
@@ -97,40 +116,67 @@ class Row extends React.Component {
   }
   
   submitPerson = () => {
+    debugger;
     let row = {...this.state.row};
     let ErrorMsg = {...this.state.ErrorMsg};
+    let Validations = { ...this.state.Validations };
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if(row.Name && row.Designation && row.Number.length == 10 && emailRegex.test(row.MailId) && row.Address && row.Links)
+    if(row.name && row.designation && row.number.length == 10 && emailRegex.test(row.mailId) && row.address && row.links)
     {
-      if (this.props.enqueueSnackbar) {
-        this.props.enqueueSnackbar('Personal details added successfully', {
-          variant: 'success',
-        }); }
-      this.props.submitPersonParent();
+      debugger;
+      const payload = {
+        "userId": 1, 
+        "name": row.name,
+        "designation": row.designation,
+        "number" : row.number,
+        "mailId" : row.mailId,
+        "address" : row.address,
+        "links" : row.links
+      };
+      this.setState({ loading: true })
+      axios.post(`http://localhost:5149/details/addDetails`, payload)
+      .then(response => {
+        this.setState({ data: response.data, loading: false });
+        if (this.props.enqueueSnackbar) {
+          this.props.enqueueSnackbar('Personal Details added successfully', {
+            variant: 'success',
+          }); }
+          this.setState({ loading: false })
+        this.props.navigate('/expereince');
+      })
+      .catch(error => {
+        const errorMessage = error.response?.data || 'An error occurred';
+        this.props.enqueueSnackbar(errorMessage, {
+          variant: 'error',
+        });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
     }
     else{
-      if (row.Name === "" || row.Name === null) {
-        row.Validations.IsName = false;
+      if (row.name === "" || row.name === null) {
+        Validations.IsName = false;
         ErrorMsg.Name = "Name cannot be empty";
       }
-      if(row.Designation === "" || row.Designation === null){
-        row.Validations.IsDesignation = false;
+      if(row.designation === "" || row.designation === null){
+        Validations.IsDesignation = false;
         ErrorMsg.Designation = "Designation cannot be empty";
       }
-      if(row.Number === "" || row.Number === null || row.Number.length < 10){
-        row.Validations.IsNumber = false;
+      if(row.number === "" || row.number === null || row.number.length < 10){
+        Validations.IsNumber = false;
         ErrorMsg.Number = "Number cannot be empty";
       }
-      if(row.MailId === "" || row.MailId === null || !emailRegex.test(row.MailId)){
-        row.Validations.IsMailId = false;
+      if(row.mailId === "" || row.mailId === null || !emailRegex.test(row.mailId)){
+        Validations.IsMailId = false;
         ErrorMsg.MailId = "MailId cannot be empty";
       }
-      if(row.Address === "" || row.Address === null){
-        row.Validations.IsAddress = false;
+      if(row.address === "" || row.address === null){
+        Validations.IsAddress = false;
         ErrorMsg.Address = "Address cannot be empty";
       }
-      if(row.Links === "" || row.Links === null){
-        row.Validations.IsLinks = false;
+      if(row.links === "" || row.links === null){
+        Validations.IsLinks = false;
         ErrorMsg.Links = "Links cannot be empty";
       }
       this.setState({ row });
@@ -139,7 +185,7 @@ class Row extends React.Component {
   }
 
   render() {
-    const { row, ErrorMsg, open } = this.state;
+    const { row, ErrorMsg, open, Validations } = this.state;
     return (
       <React.Fragment>
         
@@ -152,12 +198,12 @@ class Row extends React.Component {
               {open ? <Tooltip title="Close"><KeyboardArrowUpIcon /></Tooltip> : <Tooltip title="Expand"><KeyboardArrowDownIcon /></Tooltip>}
             </IconButton>
           </TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Name}</div></TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Designation}</div></TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Number}</div></TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.MailId}</div></TableCell>  
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Address}</div></TableCell>
-          <TableCell className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Links}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.name}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.designation}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.number}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.mailId}</div></TableCell>  
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.address}</div></TableCell>
+          <TableCell className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.links}</div></TableCell>
           <TableCell align="right" className={this.props.classes.tableCell}>
           <Tooltip title={"Save"}>
           <span>
@@ -167,6 +213,7 @@ class Row extends React.Component {
       </IconButton>
       </span>
       </Tooltip>
+      <Loading loading={this.state.loading} {...this.props}/>
 
           </TableCell>
         </TableRow>
@@ -177,47 +224,47 @@ class Row extends React.Component {
        <div className="row" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
             <div className="col-md-2 pull-left">
           <TextField
-            error={!this.state.row.Validations.IsName}
+            error={!Validations.IsName}
             required
             id="component-error"
             variant="standard"
             label="Name"
             sx={{ width: 250 }}
-            value={row.Name}
+            value={row.name}
             // helperText={ErrorMsg.Name}
-            onChange={(e) => this.handleFieldChange("Name", e)}
+            onChange={(e) => this.handleFieldChange("name", e)}
             inputProps={{ maxLength: 30 }}
           />
           </div>
         <div className="col-md-2 pull-left">
           <TextField
-            error={!this.state.row.Validations.IsDesignation}
+            error={!Validations.IsDesignation}
             required
             id="component-error"
             variant="standard"
             label="Designation"
             sx={{ width: 250 }}
-            value={row.Designation}
+            value={row.designation}
             // helperText={ErrorMsg.Designation}
-            onChange={(e) => this.handleFieldChange("Designation", e)}
+            onChange={(e) => this.handleFieldChange("designation", e)}
             inputProps={{ maxLength: 30 }}
           />
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.IsNumber}
+           error={!Validations.IsNumber}
            required
             id="component-error"
             variant="standard"
             label="Number"
             sx={{ width: 250 }}
-            value={row.Number}
+            value={row.number}
             // helperText={ErrorMsg.Number}
             onChange={(e) => {
               const { value } = e.target;
               // Allow input only if it's a number or empty (to allow deletion)
               if (/^\d*$/.test(value)) {
-                this.handleFieldChange("Number", e);  // Update only if valid
+                this.handleFieldChange("number", e);  // Update only if valid
               }
             }}
             inputProps={{
@@ -229,43 +276,43 @@ class Row extends React.Component {
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.IsMailId}
+           error={!Validations.IsMailId}
            required
             id="component-error"
             variant="standard"
             label="MailId"
             sx={{ width: 250 }}
-            value={row.MailId}
+            value={row.mailId}
             // helperText={ErrorMsg.MailId}
-            onChange={(e) => this.handleFieldChange("MailId", e)}
+            onChange={(e) => this.handleFieldChange("mailId", e)}
             inputProps={{ maxLength: 20 }}
           />
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.IsAddress}
+           error={!Validations.IsAddress}
            required
             id="component-error"
             variant="standard"
             label="Address"
             sx={{ width: 250 }}
-            value={row.Address}
+            value={row.address}
             // helperText={ErrorMsg.Address}
-            onChange={(e) => this.handleFieldChange("Address", e)}
+            onChange={(e) => this.handleFieldChange("address", e)}
             inputProps={{ maxLength: 100 }}
           />
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.IsLinks}
+           error={!Validations.IsLinks}
            required
             id="component-error"
             variant="standard"
             label="Links"
             sx={{ width: 250 }}
-            value={row.Links}
+            value={row.links}
             // helperText={ErrorMsg.Links}
-            onChange={(e) => this.handleFieldChange("Links", e)}
+            onChange={(e) => this.handleFieldChange("links", e)}
             inputProps={{ maxLength: 50 }}
           />
         </div>
@@ -291,61 +338,18 @@ class Personal extends React.Component {
       } 
     }
   
-    backSummary = () => {
-      this.stepperRef.current.handleBack();
-    }
-
-    submitPersonParent = () => {
-      this.props.navigate('/links');
-    }
-
-    // submitExperience = (row) => {
-    //   debugger;
-    //   if(row.company && row.Designation && row.Location && row.Experience && row.skill && row.task)
-    //   {
-  
-    //   }
-    //   else{
-    //     if (row.company === "" || row.company === null) {
-    //       console.log("hi");
-    //       // row.Validations.IsValidAddress_Line_1 = false;
-    //       // ErrorMsg.Address = "Address cannot be empty"
-    //     }
-    //     if(row.Designation === "" || row.Designation === null){
-    //       row.Validations.IsDesignation = false;
-  
-    //     }
-    //   }
-  
-    //   this.stepperRef.current.handleNext();
-    //  if (this.props.enqueueSnackbar) {
-    //     this.props.enqueueSnackbar('This is a shared notification message!', {
-    //       variant: 'success',
-    //     }); }
-    //   // axios.put(`https://api.example.com/data/`, this.state.summary)
-    //   // .then(response => {
-  
-    //   //   this.setState({ data: response.data, loading: false });
-    //   //   console.log('Data updated successfully:', response.data);
-    //   // })
-    //   // .catch(error => {
-    //   //   // // Handle error
-    //   //   // this.setState({ error: error.message, loading: false });
-    //   //   // console.error('Error updating data:', error);
-    //   // });
-    // }
   
     componentDidMount() {
       if (this.state.rows.length === 0) {
       let row = {
         open: true,
-        Id : 0,
-        Name: "",
-        Designation: "",
-        Number:"",
-        MailId: "",
-        Address : "",
-        Links: ""
+        id : 0,
+        name: "",
+        designation: "",
+        number:"",
+        mailId: "",
+        address : "",
+        links: ""
       }
       this.state.rows.unshift(row)
       this.setState({
@@ -379,7 +383,6 @@ class Personal extends React.Component {
           <TableBody>
             {rows.map((row) => (
               <Row key={row.name} row={row} 
-              submitPersonParent = {this.submitPersonParent}
               rows = {rows}
               {...this.props}
               />

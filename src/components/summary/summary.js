@@ -22,6 +22,7 @@ import LinearStepper from '../../shared/linearStepper';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useStyles } from '../../shared/styles/defaultStyle';
 import BookIcon from '@mui/icons-material/Book';
+import Loading from '../../shared/loading';
 
 function createData(name, calories, fat, carbs, protein, price) {
   return {
@@ -57,36 +58,64 @@ class Row extends React.Component {
     };
   }
 
+  componentDidMount(){
+    debugger;
+    this.setState({ loading: true });
+    const payload = {
+      "userId": 1, 
+    };
+    axios.post(`http://localhost:5150/summary/getSummary`, payload)
+    .then(response => {
+      this.setState({ summary: response.data, loading: false });
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+    .finally(() => {
+      this.setState({ loading: false });
+    });
+  }
+
   handleClick = () => {
     this.setState({ open: !this.state.open });
   };
 
-  handleSummaryChange = (summary) => {
-    this.setState({ summary: summary });
+  handleSummaryChange = (updatedSummary) => {
+    this.setState({ summary: updatedSummary });
   }
 
-  // submitSummary = () => {
-  //   console.log('enqueueSnackbar:', this.props.enqueueSnackbar);
-  //  if (this.props.enqueueSnackbar) {
-  //     this.props.enqueueSnackbar('This is a shared notification message!', {
-  //       variant: 'success',
-  //     }); }
-  //   this.setState({ loading: true });
-  //   // axios.put(`https://api.example.com/data/`, this.state.summary)
-  //   // .then(response => {
-
-  //   //   this.setState({ data: response.data, loading: false });
-  //   //   console.log('Data updated successfully:', response.data);
-  //   // })
-  //   // .catch(error => {
-  //   //   // // Handle error
-  //   //   // this.setState({ error: error.message, loading: false });
-  //   //   // console.error('Error updating data:', error);
-  //   // });
-  // }
+  submitSummary = () => {
+    debugger;
+    const payload = {
+      "userId": 1, 
+      "summary": this.state.summary 
+    };
+    this.setState({ loading: true })
+    axios.post(`http://localhost:5150/summary/addSummary`, payload)
+    .then(response => {
+      this.setState({ data: response.data, loading: false });
+      if (this.props.enqueueSnackbar) {
+        this.props.enqueueSnackbar('Summary added successfully', {
+          variant: 'success',
+        }); }
+        this.setState({ loading: false })
+      this.props.navigate('/expereince');
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+    .finally(() => {
+      this.setState({ loading: false });
+    });
+  }
 
   render() {
-    const { row } = this.props;
     const { open , summary } = this.state;
     const isSummaryEmpty = !summary;
 
@@ -119,11 +148,13 @@ class Row extends React.Component {
           <Tooltip title={isSummaryEmpty ? "Please Enter Summary" : "Submit"}>
           <span>
           <IconButton aria-label="fingerprint" color="success"   disabled={!summary}>
-        <Fingerprint onClick={this.props.submitSummary } 
+        <Fingerprint onClick={this.submitSummary } 
         />
+        
       </IconButton>
       </span>
       </Tooltip>
+      <Loading loading={this.state.loading} {...this.props}/>
 
           </TableCell>
         </TableRow>
@@ -132,6 +163,7 @@ class Row extends React.Component {
             <Collapse in={open} timeout="auto" unmountOnExit>
               <Box sx={{ margin: 1 }}>
                 <MinHeightTextarea onSummaryChange={this.handleSummaryChange} 
+                 summary={summary}
                 text={"Please Enter Summary"}
                 enable = {true}
                 {...this.props}
@@ -163,24 +195,7 @@ class Summary extends React.Component {
     this.stepperRef.current.handleBack();
   }
 
-  submitSummary = () => {
-   if (this.props.enqueueSnackbar) {
-      this.props.enqueueSnackbar('Summary added successfully', {
-        variant: 'success',
-      }); }
-      this.props.navigate('/expereince');
-    // axios.put(`https://api.example.com/data/`, this.state.summary)
-    // .then(response => {
-
-    //   this.setState({ data: response.data, loading: false });
-    //   console.log('Data updated successfully:', response.data);
-    // })
-    // .catch(error => {
-    //   // // Handle error
-    //   // this.setState({ error: error.message, loading: false });
-    //   // console.error('Error updating data:', error);
-    // });
-  }
+ 
 
   render() {
     return (
@@ -203,8 +218,6 @@ class Summary extends React.Component {
           <TableBody>
             {rows.map((row) => (
               <Row key={row.name} row={row} 
-              submitSummary = {this.submitSummary}
-              backSummary = {this.backSummary}
               {...this.props}
               />
             ))}

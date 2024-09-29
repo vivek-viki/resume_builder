@@ -12,6 +12,7 @@ import Skills from './components/skills/skills';
 import Certificates from './components/certificates/certificates';
 import Projects from './components/projects/projects';
 import Personal from './components/personal/personal';
+import Language from './components/language/language';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -26,9 +27,9 @@ root.render(
         <Route exact path="/expereince" element={<Experience/>} />
         <Route exact path="/education" element={<Education/>} />
         <Route exact path="/skills" element={<Skills/>} />
+        <Route exact path="/language" element={<Language/>} />
         <Route exact path="/certificates" element={<Certificates/>} />
         <Route exact path="/projects" element={<Projects/>} />
-        
       </Routes>
     </Router>
     </SharedSnackbarProvider>

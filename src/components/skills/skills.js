@@ -245,7 +245,7 @@ class Skills extends React.Component {
       this.props.enqueueSnackbar('Skills added successfully', {
         variant: 'success',
       }); }
-      this.props.navigate('/certificates');
+      this.props.navigate('/language');
     // axios.put(`https://api.example.com/data/`, this.state.summary)
     // .then(response => {
 

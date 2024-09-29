@@ -222,7 +222,7 @@ class Certificates extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      activeStep : 5
+      activeStep : 6
     }
   }
 
