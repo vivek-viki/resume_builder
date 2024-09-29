@@ -1,0 +1,6 @@
+{
+    "APPLICATION_URL":"http://localhost:5150/",
+    "ENDPOINTS":{
+        "POST_SUMMARY" : "summary/addSummary"
+    }
+}
