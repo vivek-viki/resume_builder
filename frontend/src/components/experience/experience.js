@@ -31,53 +31,48 @@ import {TextField } from '@mui/material';
 import { useStyles } from '../../shared/styles/defaultStyle';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import Loading from "../../shared/loading";
+import InputAdornment from '@mui/material/InputAdornment';
 
 
 class Row extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      open: true,
-      loading: false,
-      task : '',
+      loading: false, 
       row : {
-        open: props.row.Id === 0 ? true : false,
-        Id : props.row.Id,
-        Company: props.row.Company,
-        Designation: props.row.Designation,
-        Location: props.row.Location,
-        Experience: props.row.Experience,
-        Skills: props.row.Skills,
-        Tasks: props.row.Tasks,
-        Validations: {
-          "IsCompany": true,
-          "IsDesignation": true,
-          "IsLocation": true,
-          "IsExperience": true,
-          "IsSkills": true,
-          "IsTasks": true
-        }
+        open: props.row.id === 0 ? true : false,
+        id : props.row.id,
+        company: props.row.company,
+        designation: props.row.designation,
+        location: props.row.location,
+        experience: props.row.experience,
+        skills: props.row.skills,
+        tasks: props.row.tasks,
+      },
+      Validations: {
+        "Iscompany": true,
+        "Isdesignation": true,
+        "Islocation": true,
+        "Isexperience": true,
+        "Isskills": true,
+        "Istasks": true
       },
       ErrorMsg: {
-        Company: "",
-        Designation: "",
-        Location: "",
-        Experience: "",
-        Skills: "",
-        Tasks: ""
+        company: "",
+        designation: "",
+        location: "",
+        experience: "",
+        skills: "",
+        tasks: ""
       },
-      skillData: [
-        { key: 1, label: 'React' },
-        { key: 2, label: 'JavaScript' },
-        { key: 3, label: 'Node.js' },
-        { key: 4, label: 'MongoDB' },
-        { key: 5, label: 'Oracle' },
-        { key: 6, label: 'Spring Boot' },
-        { key: 7, label: 'Spring Framework' }
-      ]
+      skillData: this.props.skillsList || [],
+      New_Skills : []
     };
     
   }
+
+ 
 
   handleClick = (event) => {
     let row = { ...this.state.row }
@@ -86,187 +81,190 @@ class Row extends React.Component {
     this.setState({ row  });
   };
 
-
-  setCompany = (event) => {
-    let row = { ...this.state.row }
-    let ErrorMsg = { ...this.state.ErrorMsg }
-    row.Company = event.target.value.trimStart();
-
+  handleFieldChange = (fieldName, event) => {
+    let row = { ...this.state.row };
+    let Validations = { ...this.state.Validations };
+    let ErrorMsg = { ...this.state.ErrorMsg };
+    row[fieldName] = event.target.value.trimStart();
+  
     if (event.target.value) {
-      row.Validations.IsCompany = true;
-      ErrorMsg.Company = "";
+      Validations[`Is${fieldName}`] = true;
+      ErrorMsg[fieldName] = "";
+    } else {
+      Validations[`Is${fieldName}`] = false;
+      ErrorMsg[fieldName] = `${fieldName} cannot be empty`;
     }
-    else {
-      row.Validations.IsCompany = false;
-      ErrorMsg.Company = "Company name cannot be empty";
-    }
-
-    this.setState({ row, ErrorMsg });
-  }
-
-  setDesignation = (event) => {
-    let row = { ...this.state.row }
-    let ErrorMsg = { ...this.state.ErrorMsg }
-    row.Designation = event.target.value.trimStart();
-
-    if (event.target.value) {
-      row.Validations.IsDesignation = true;
-      ErrorMsg.Designation = "";
-    }
-    else {
-      row.Validations.IsDesignation = false;
-      ErrorMsg.Designation = "Designation name cannot be empty";
-    }
-
-    this.setState({ row, ErrorMsg });
-  }
-
-  setLocation = (event) => {
-    let row = { ...this.state.row }
-    let ErrorMsg = { ...this.state.ErrorMsg }
-    row.Location = event.target.value.trimStart();
-
-    if (event.target.value) {
-      row.Validations.IsLocation = true;
-      ErrorMsg.Location = "";
-    }
-    else {
-      row.Validations.IsLocation = false;
-      ErrorMsg.Location = "Location name cannot be empty";
-    }
-
-    this.setState({ row, ErrorMsg });
-  }
-
-
-  setExperience = (event) => {
-    let row = { ...this.state.row }
-    let ErrorMsg = { ...this.state.ErrorMsg }
-    row.Experience = event.target.value.trimStart();
-
-    if (event.target.value) {
-      row.Validations.IsExperience = true;
-      ErrorMsg.Experience = "";
-    }
-    else {
-      row.Validations.IsExperience = false;
-      ErrorMsg.Experience = "Experience name cannot be empty";
-    }
-
-    this.setState({ row, ErrorMsg });
-  }
-
-  setSkills = (event) => {
-    let row = { ...this.state.row }
-    let ErrorMsg = { ...this.state.ErrorMsg }
-    row.Skills = event.target.value.trimStart();
-
-    if (event.target.value) {
-      row.Validations.IsLocation = true;
-      ErrorMsg.Skills = "";
-    }
-    else {
-      row.Validations.IsSkills = false;
-      ErrorMsg.Skills = "Skills name cannot be empty";
-    }
-
-    this.setState({ row, ErrorMsg });
-  }
-
-
-  setTasks = (event) => {
-    let row = { ...this.state.row }
-    let ErrorMsg = { ...this.state.ErrorMsg }
-    row.Tasks = event.target.value.trimStart();
-
-    if (event.target.value) {
-      row.Validations.IsTasks = true;
-      ErrorMsg.Tasks = "";
-    }
-    else {
-      row.Validations.IsTasks = false;
-      ErrorMsg.Tasks = "Tasks name cannot be empty";
-    }
-
-    this.setState({ row, ErrorMsg });
+    this.setState({ row, ErrorMsg, Validations });
   }
 
   handleDelete = (chipToDelete) => {
-    this.setState((prevState) => ({
-      row: {
-        ...prevState.row,
-        Skills: prevState.row.Skills.filter((skill) => skill !== chipToDelete) // Filter by skill
-      }
-    }));
+    this.setState((prevState) => {
+      const updatedSkills = prevState.row.skills.filter((skill) => skill !== chipToDelete);
+  
+      return {
+        row: {
+          ...prevState.row,
+          skills: updatedSkills, // Update the skills array
+        },
+        Validations: {
+          ...prevState.Validations,
+          Isskills: updatedSkills.length === 0 ? false : true, // Set Isskills to false if no skills left
+        },
+      };
+    });
   };
+  
 
-  onSelectSkill = (chips) => {
-    let selectedSkill = chips.target.innerText;
+  onSelectSkill = (selectedSkill) => {
+    let validations = {...this.state.Validations};
+    validations.Isskills = true;
     this.setState((prevState) => ({
       row: {
         ...prevState.row,
-        Skills: prevState.row.Skills.includes(selectedSkill)
-          ? prevState.row.Skills
-          : [...prevState.row.Skills, selectedSkill] // Avoid duplicates
-      }
+        skills: prevState.row.skills.includes(selectedSkill)
+          ? prevState.row.skills // If skill already exists, keep the array unchanged
+          : [...prevState.row.skills, selectedSkill] // Otherwise, add the new skill
+      },
+      Validations: validations
     }));
   }
+
 
   handleOnTaskChange = (task) => {
     let row = {...this.state.row};
-    row.Tasks = task;
+    row.tasks = task;
     this.setState({ row});
   }
 
-  submitExperience = () => {
-    debugger;
+  newSkills = () => {
+    this.setState((prevState) => {
+      // Access skills from prevState.row
+      const currentSkills = prevState.row.skills || [];
+  
+      // Avoid duplicates by checking if New_Skills is already in the array
+      const updatedSkills = currentSkills.includes(this.state.New_Skills)
+        ? currentSkills
+        : [...currentSkills, this.state.New_Skills];
+  
+      // Update skills inside the row object and reset New_Skills
+      return {
+        row: {
+          ...prevState.row, // Spread the existing properties of row
+          skills: updatedSkills, // Update skills
+        },
+        New_Skills: "", // Reset New_Skills
+      };
+    });
+  };
+  
+
+  submitexperience = () => {
     let row = {...this.state.row};
+    let Validations = { ...this.state.Validations };
     let ErrorMsg = {...this.state.ErrorMsg};
-    if(row.Company && row.Designation && row.Location && row.Experience && row.Skills.length > 0 && row.Tasks)
+    if(row.company && row.designation && row.location && row.experience && row.skills.length > 0 && row.tasks)
     {
-      row.Id = 1;
-      if (this.props.enqueueSnackbar) {
-        this.props.enqueueSnackbar('Experience added successfully', {
-          variant: 'success',
-          row
-        }); }
-      this.props.submitExperienceParent(row);
-      row.open = false; // Set open to false to collapse the row
-      this.setState({ row }); // Update the state to reflect the change
+      const payload = {
+        "userId": 1, 
+        "id" : row.id,
+        "company": row.company,
+        "designation": row.location,
+        "location" : row.location,
+        "experience" : row.experience,
+        "skills" : row.skills,
+        "tasks" : row.tasks
+      };
+      this.setState({ loading: true })
+      axios.post(`http://localhost:5151/experience/addExperience`, payload)
+      .then(data => {
+        if(row.id === 0){
+          row.open = false;
+          row.id = data.data.id;
+          row.company = data.data.company;
+          row.designation = data.data.designation;
+          row.location = data.data.location;
+          row.experience = data.data.experience;
+          row.skills = data.data.skills;
+          row.tasks = data.data.tasks;
+          this.setState({row});
+          if (this.props.enqueueSnackbar) {
+            this.props.enqueueSnackbar('experience added successfully', {
+              variant: 'success',
+            }); }
+          this.props.updateTableData(row);
+           } else if(row.id === data.data.id){
+            row.open = false;
+            row.id = data.data.id;
+            row.company = data.data.company;
+            row.designation = data.data.designation;
+            row.location = data.data.location;
+            row.experience = data.data.experience;
+            row.skills = data.data.skills;
+            row.tasks = data.data.tasks;
+            this.setState({row});
+            if (this.props.enqueueSnackbar) {
+              this.props.enqueueSnackbar('experience updated successfully', {
+                variant: 'success',
+              }); }
+            this.props.updateTableData(row);
+          }
+          
+      })
+      .catch(error => {
+        const errorMessage = error.response?.data || 'An error occurred';
+        this.props.enqueueSnackbar(errorMessage, {
+          variant: 'error',
+        });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
     }
     else{
-      if (row.Company === "" || row.Company === null) {
-        row.Validations.IsCompany = false;
-        ErrorMsg.Company = "Address cannot be empty";
+      if (row.company === "" || row.company === null) {
+        Validations.Iscompany = false;
+        ErrorMsg.company = "Company name be empty";
       }
-      if(row.Designation === "" || row.Designation === null){
-        row.Validations.IsDesignation = false;
-        ErrorMsg.Designation = "Designation cannot be empty";
+      if(row.designation === "" || row.designation === null){
+        Validations.Isdesignation = false;
+        ErrorMsg.designation = "designation cannot be empty";
       }
-      if(row.Location === "" || row.Location === null){
-        row.Validations.IsLocation = false;
-        ErrorMsg.Location = "Location cannot be empty";
+      if(row.location === "" || row.location === null){
+        Validations.Islocation = false;
+        ErrorMsg.location = "location cannot be empty";
       }
-      if(row.Experience === "" || row.Experience === null){
-        row.Validations.IsExperience = false;
-        ErrorMsg.Experience = "Experience cannot be empty";
+      if(row.experience === "" || row.experience === null){
+        Validations.Isexperience = false;
+        ErrorMsg.experience = "experience cannot be empty";
       }
-      if(row.Skills.length === 0){
-        row.Validations.IsSkills = false;
-        ErrorMsg.Skills = "Skills cannot be empty";
+      if(row.skills.length === 0){
+        Validations.Isskills = false;
+        ErrorMsg.skills = "skills cannot be empty";
       }
-      if(row.Tasks === "" || row.Tasks === null){
-        row.Validations.IsTasks = false;
-        ErrorMsg.Tasks = "Tasks cannot be empty";
+      if(row.tasks === "" || row.tasks === null){
+        Validations.Istasks = false;
+        ErrorMsg.tasks = "tasks cannot be empty";
       }
-      this.setState({ row });
+      this.setState({ row, Validations });
     }
     this.setState({ ErrorMsg });
   }
 
+  handleSkillChange = (fieldName, event) => {
+    let validations = {...this.state.Validations};
+    let ErrorMsg = { ...this.state.ErrorMsg };
+    if (event.target.value) {
+      validations.Isskills = true;
+      ErrorMsg.skills = "";
+    } else {
+      validations.Isskills = false;
+      ErrorMsg.skills = `${fieldName} cannot be empty`;
+    }
+    this.setState({ New_Skills : event.target.value, Validations: validations, ErrorMsg });
+  }
+
   render() {
-    const { row } = this.state;
-    debugger;
+    const { row, Validations } = this.state;
     return (
       <React.Fragment>
         
@@ -279,13 +277,13 @@ class Row extends React.Component {
               {row.open ? <Tooltip title="Close"><KeyboardArrowUpIcon /></Tooltip> : <Tooltip title="Expand"><KeyboardArrowDownIcon /></Tooltip>}
             </IconButton>
           </TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Company}</div></TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Designation}</div></TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Location}</div></TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Experience}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.company}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.designation}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.location}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.experience}</div></TableCell>
           <TableCell className={this.props.classes.tableCell}> 
           <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {row.Skills.map((skill, index) => (
+          {row.skills.map((skill, index) => (
             <Chip
               key={index}
               label={skill}
@@ -293,24 +291,24 @@ class Row extends React.Component {
           ))}
           </Box>
             </TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Tasks}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.tasks}</div></TableCell>
           <TableCell align="right">
           <Tooltip title="Delete">
             <span>
         <IconButton aria-label="fingerprint" color="secondary">
-          <Fingerprint onClick={() => this.props.DeleteExperience(row.Id)} />
+          <Fingerprint onClick={() => this.props.DeleteExperience(row.id)} />
         </IconButton>
         </span>
         </Tooltip>
           <Tooltip title={"Save"}>
           <span>
           <IconButton aria-label="fingerprint" color="success" >
-        <Fingerprint onClick={ this.submitExperience} 
+        <Fingerprint onClick={ this.submitexperience} 
         />
       </IconButton>
       </span>
       </Tooltip>
-
+      <Loading loading={this.state.loading} {...this.props}/>
           </TableCell>
         </TableRow>
         <TableRow>
@@ -320,73 +318,73 @@ class Row extends React.Component {
        <div className="row" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
             <div className="col-md-2 pull-left">
           <TextField
-            error={!this.state.row.Validations.IsCompany}
+            error={!Validations.Iscompany}
             required
             id="component-error"
             variant="standard"
-            label="Company Name"
+            label="company Name"
             sx={{ width: 250 }}
-            value={row.Company}
-            // helperText={ErrorMsg.Company}
-            onChange={(e) => this.setCompany(e)}
+            value={row.company}
+            // helperText={ErrorMsg.company}
+            onChange={(e) => this.handleFieldChange("company", e)}
             inputProps={{ maxLength: 50 }}
           />
           </div>
         <div className="col-md-2 pull-left">
           <TextField
-            error={!this.state.row.Validations.IsDesignation}
+            error={!Validations.Isdesignation}
             required
             id="component-error"
             variant="standard"
-            label="Designation"
+            label="designation"
             sx={{ width: 250 }}
-            value={row.Designation}
-            // helperText={ErrorMsg.Designation}
-            onChange={(e) => this.setDesignation(e)}
+            value={row.designation}
+            // helperText={ErrorMsg.designation}
+            onChange={(e) => this.handleFieldChange("designation", e)}
             inputProps={{ maxLength: 50 }}
           />
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.IsLocation}
+           error={!Validations.Islocation}
            required
             id="component-error"
             variant="standard"
-            label="Location"
+            label="location"
             sx={{ width: 250 }}
-            value={row.Location}
-            // helperText={ErrorMsg.Location}
-            onChange={(e) => this.setLocation(e)}
+            value={row.location}
+            // helperText={ErrorMsg.location}
+            onChange={(e) => this.handleFieldChange("location", e)}
             inputProps={{ maxLength: 50 }}
           />
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.IsExperience}
+           error={!Validations.Isexperience}
            required
             id="component-error"
             variant="standard"
-            label="Experience"
+            label="experience"
             sx={{ width: 250 }}
-            value={row.Experience}
-            // helperText={ErrorMsg.Experience}
-            onChange={(e) => this.setExperience(e)}
+            value={row.experience}
+            // helperText={ErrorMsg.experience}
+            onChange={(e) => this.handleFieldChange("experience", e)}
             inputProps={{ maxLength: 15 }}
           />
         </div>
         {/* <Box> */}
         <div className="col-md-2 pull-left">
         <Stack direction="row" spacing={1}>
-        {this.state.skillData.map((chip) => (
-        <Chip
-          key={chip.key}
-          label={chip.label}
-          onClick={(chip)=>this.onSelectSkill(chip)}
-        />
-      ))}
-         </Stack>
+        {this.state.skillData.map((skill, index) => (
+          <Chip
+            key={index}          
+            label={skill}      
+            onClick={() => this.onSelectSkill(skill)}
+          />
+        ))}
+      </Stack>
           <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {row.Skills.map((skill, index) => (
+          {row.skills.map((skill, index) => (
             <Chip
               key={index}
               label={skill}
@@ -397,20 +395,49 @@ class Row extends React.Component {
       {/* </Box> */}
       </div>
         </div>
-        &nbsp;
+        <div className="row" style={{ marginBottom: '10px' }}>
+        <TextField
+            required
+            id="component-error"
+            variant="standard"
+            label="Skills"
+            sx={{ width: '100%'}}
+            error={!Validations.Isskills}
+            value={this.state.New_Skills}
+            // helperText={ErrorMsg.College}
+            onChange={(e) => this.handleSkillChange("Skills", e)}
+            inputProps={{ maxLength: 50 }}
+            InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={this.newSkills}
+                      disabled = {this.state.New_Skills == ""}  // Define what happens on click
+                      sx={{ transform: 'translateY(-7px)' }}
+                    >
+                      Add Skills
+                    </Button>
+                  </InputAdornment>
+                ),
+              }}
+          />
+          </div>
+          
         <div className="row">
           
         <MinHeightTextarea 
-        //  error={!this.state.row.Validations.IsTasks}
+        //  error={!Validations.Istasks}
          required
-         text={"Please Enter Tasks"}
+         text={"Please Enter tasks"}
           id="component-error"
           variant="standard"
-          label="Tasks"
+          label="tasks"
           // sx={{ width: '100%' }}
-          value={row.Tasks}
+          value={row.tasks}
           onSummaryChange={this.handleOnTaskChange}
-          // helperText={ErrorMsg.Tasks}
+          // helperText={ErrorMsg.tasks}
         />
       </div>
     </Box>
@@ -430,71 +457,75 @@ class Experience extends React.Component {
     super(props);
     this.state = {
       rows : [],
+      skillsList : [],
       activeStep : 2
     } 
   }
-
-  backSummary = () => {
-    this.stepperRef.current.handleBack();
-  }
-
-  submitExperience = () => {
-    this.props.navigate('/education');
-  }
-
-  submitExperienceParent = (row) => {
+  submitexperienceParent = (row) => {
     let rows = [...this.state.rows];
-    rows[0].Id = row.Id;
+    rows[0].id = row.id;
         this.setState({rows});
         
   }
 
-  // submitExperience = (row) => {
-  //   debugger;
-  //   if(row.company && row.Designation && row.Location && row.Experience && row.skill && row.task)
-  //   {
+  getSkills = () => {
+    axios.get(`http://localhost:5151/experience/getSkills`)
+    .then(response => {
+      this.setState({ skillsList: response.data});
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+  }
 
-  //   }
-  //   else{
-  //     if (row.company === "" || row.company === null) {
-  //       console.log("hi");
-  //       // row.Validations.IsValidAddress_Line_1 = false;
-  //       // ErrorMsg.Address = "Address cannot be empty"
-  //     }
-  //     if(row.Designation === "" || row.Designation === null){
-  //       row.Validations.IsDesignation = false;
+  componentDidMount(){
+    this.setState({ loading: true });
+    this.getSkills();
+    axios.post(`http://localhost:5151/experience/getExperience/1`)
+    .then(response => {
+      this.setState({ rows: response.data, loading: false });
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+    .finally(() => {
+      this.setState({ loading: false });
+    });
+  }
 
-  //     }
-  //   }
-
-  //   this.stepperRef.current.handleNext();
-  //  if (this.props.enqueueSnackbar) {
-  //     this.props.enqueueSnackbar('This is a shared notification message!', {
-  //       variant: 'success',
-  //     }); }
-  //   // axios.put(`https://api.example.com/data/`, this.state.summary)
-  //   // .then(response => {
-
-  //   //   this.setState({ data: response.data, loading: false });
-  //   //   console.log('Data updated successfully:', response.data);
-  //   // })
-  //   // .catch(error => {
-  //   //   // // Handle error
-  //   //   // this.setState({ error: error.message, loading: false });
-  //   //   // console.error('Error updating data:', error);
-  //   // });
-  // }
+  updateTableData = updatedRow => {
+  
+    // Copy the current state rows to data
+    let data = [...this.state.rows];
+  
+    // Map through the rows and update the row with id === 0 or matching id with updatedRow
+    const updatedData = data.map(row => 
+      row.id === 0 || row.id === updatedRow.id ? updatedRow : row
+    );
+  
+    // Update the state with the modified rows
+    this.setState({
+      rows: updatedData
+    });
+  };
+  
 
   addNewRow = event => {
       let row = {
         open: true,
-        Id : 0,
-        Company: "",
-        Designation: "",
-        Location: "",
-        Experience: "",
-        Skills: [],
-        Tasks: ""
+        id : 0,
+        company: "",
+        designation: "",
+        location: "",
+        experience: "",
+        skills: [],
+        tasks: ""
       }
       this.state.rows.unshift(row)
       this.setState({
@@ -503,15 +534,40 @@ class Experience extends React.Component {
     }
 
     DeleteExperience = (id) => {
-      debugger;
-      this.setState((prevState) => ({
-        rows: prevState.rows.filter(row => row.Id !== id) // Filter out the row with the matching id
-      }));
+      let rows = [...this.state.rows]
+      this.setState({ loading: true });
+      axios.delete(`http://localhost:5151/experience/deleteExperience/${id}`)
+      .then(response => {
+        // this.setState({ loading: false })
+        if (this.props.enqueueSnackbar) {
+          this.props.enqueueSnackbar('experience deleted successfully', {
+            variant: 'success',
+          }); }
+          // this.setState({ loading: false })
+      })
+      .catch(error => {
+        const errorMessage = error.response?.data || 'An error occurred';
+        this.props.enqueueSnackbar(errorMessage, {
+          variant: 'error',
+        });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
+      this.setState((prevState) => {
+        const updatedRows = prevState.rows.filter(row => row.id !== id);
+        return { rows: updatedRows };
+    }, () => {
+        this.forceUpdate(); // Force update (not recommended for regular use)
+    });
     };
 
+    submitExperience = () =>{
+      this.props.navigate('/education');
+    }
 
   render() {
-   const {rows} = this.state;
+   const {rows, skillsList} = this.state;
     return (  
       <Card >
       {/* <CardActionArea > */}
@@ -534,12 +590,12 @@ class Experience extends React.Component {
       variant="contained"
       onClick={(e) => this.addNewRow(e)}
       className={this.props.classes.containedbutton}
-      disabled = {(rows[0]?.Id === 0)}
+      disabled = {(rows[0]?.id === 0)}
     >
-      Add Experience
+      Add experience
     </Button>
     <Tooltip title={"Next"}>
-    <IconButton aria-label="fingerprint" color="success"  disabled={!rows.length || rows[0]?.Id === 0}>
+    <IconButton aria-label="fingerprint" color="success"  disabled={!rows.length || rows[0]?.id === 0}>
         <Fingerprint onClick={ this.submitExperience} 
         />
       </IconButton>
@@ -550,10 +606,12 @@ class Experience extends React.Component {
           </TableHead>
           <TableBody>
             {rows.map((row) => (
-              <Row key={row.name} row={row} 
-              submitExperienceParent = {this.submitExperienceParent}
+              <Row key={row.id} row={row} 
+              submitexperienceParent = {this.submitexperienceParent}
               DeleteExperience = {this.DeleteExperience}
+              updateTableData = {this.updateTableData}
               rows = {rows}
+              skillsList = {skillsList}
               {...this.props}
               />
             ))}

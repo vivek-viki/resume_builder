@@ -7,7 +7,7 @@ class MinHeightTextarea extends Component {
   constructor(props) {
     super(props);
     this.state = {
-        summary: props.summary ,
+        summary: props.summary || props.value || '' ,
         charCount: props.summary?.length || 0
     }
 

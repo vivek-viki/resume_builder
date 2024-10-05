@@ -61,12 +61,9 @@ class Row extends React.Component {
   componentDidMount(){
     debugger;
     this.setState({ loading: true });
-    const payload = {
-      "userId": 1, 
-    };
-    axios.post(`http://localhost:5150/summary/getSummary`, payload)
+    axios.post(`http://localhost:5150/summary/getSummary/1`)
     .then(response => {
-      this.setState({ summary: response.data, loading: false });
+      this.setState({ summary: response.data.summary, loading: false });
     })
     .catch(error => {
       const errorMessage = error.response?.data || 'An error occurred';

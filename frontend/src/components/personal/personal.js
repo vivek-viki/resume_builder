@@ -106,7 +106,7 @@ class Row extends React.Component {
       ErrorMsg[fieldName] = `${fieldName} cannot be empty`;
     }
   
-    this.setState({ row, ErrorMsg });
+    this.setState({ row, ErrorMsg, Validations });
   }
 
   handleDate = (date, type) => {
