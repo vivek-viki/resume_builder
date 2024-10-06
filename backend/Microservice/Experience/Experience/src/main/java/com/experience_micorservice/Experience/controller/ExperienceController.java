@@ -1,5 +1,6 @@
 package com.experience_micorservice.Experience.controller;
 
+import com.experience_micorservice.Experience.model.AddSkills;
 import com.experience_micorservice.Experience.model.Experience;
 import com.experience_micorservice.Experience.model.Skills;
 import com.experience_micorservice.Experience.service.ExperienceService;
@@ -85,9 +86,50 @@ public class ExperienceController {
     @GetMapping("/getSkills")
     public ResponseEntity<?> getSkills(){
         try {
+            Thread.sleep(3000);
             List<String> skillList = skills.getSkills();
 
             return ResponseEntity.status(HttpStatus.OK).body(skillList);
+        } catch (Exception e) {
+            // Handle any other exceptions that may occur
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/addSkills")
+    public ResponseEntity<?> addSkills(@RequestBody AddSkills skills){
+        try {
+            Thread.sleep(3000);
+            Optional<AddSkills> existingSkills = service.findSkillsById(skills.getId());
+
+            if (existingSkills.isPresent()) {
+                // If the experience exists, update the record
+                AddSkills updatedSkills = existingSkills.get();
+                updatedSkills.setUserId(skills.getUserId());
+                updatedSkills.setSkillData(skills.getSkillData());
+
+                // Save the updated experience
+                AddSkills savedSkills = service.updateSkills(updatedSkills);
+                return ResponseEntity.status(HttpStatus.OK).body(savedSkills);
+            } else {
+                AddSkills addskills = service.addSkills(skills);
+
+                return ResponseEntity.status(HttpStatus.OK).body(addskills);
+            }
+        }catch (Exception e) {
+            // Handle any other exceptions that may occur
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/getSkillData/{userId}")
+    public ResponseEntity<?> getSkillData(@PathVariable int userId){
+        try {
+            AddSkills data = service.getSkillData(userId);
+
+            return ResponseEntity.status(HttpStatus.OK).body(data);
         } catch (Exception e) {
             // Handle any other exceptions that may occur
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

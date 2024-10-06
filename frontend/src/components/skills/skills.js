@@ -27,7 +27,7 @@ import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import InputAdornment from '@mui/material/InputAdornment';
 import Button from '@mui/material/Button';
-
+import Loading  from '../../shared/loading';
 
 
 function createData(name, calories, fat, carbs, protein, price) {
@@ -58,18 +58,11 @@ class Row extends React.Component {
     super(props);
     this.state = {
       open: true,
-      Skills: [],
+      skills: this.props.userSkills || [],
       New_Skills : [],
-      loading: false,
-      skillData: [
-        { key: 1, label: 'React' },
-        { key: 2, label: 'JavaScript' },
-        { key: 3, label: 'Node.js' },
-        { key: 4, label: 'MongoDB' },
-        { key: 5, label: 'Oracle' },
-        { key: 6, label: 'Spring Boot' },
-        { key: 7, label: 'Spring Framework' }
-      ]
+      loading:false,
+      skillData: this.props.skillsList || [],
+      id : this.props.id
     };
   }
 
@@ -83,25 +76,24 @@ class Row extends React.Component {
 
   handleDelete = (chipToDelete) => {
     this.setState((prevState) => ({
-      Skills: prevState.Skills.filter((skill) => skill !== chipToDelete) // Remove the selected skill
+      skills: prevState.skills.filter((skill) => skill !== chipToDelete) // Remove the selected skill
     }));
   };
 
-  onSelectSkill = (event) => {
-    const selectedSkill = event.target.innerText;
-
+  onSelectSkill = (selectedSkill) => {
     this.setState((prevState) => {
-      // Avoid duplicates
-      const updatedSkills = prevState.Skills.includes(selectedSkill)
-        ? prevState.Skills
-        : [...prevState.Skills, selectedSkill];
-      
-      return { Skills: updatedSkills }; // Update Skills directly
+      // Ensure skills is an array and check if the skill is already present
+      const updatedSkills = (prevState.skills || []).includes(selectedSkill)
+        ? prevState.skills // If skill already exists, keep array unchanged
+        : [...(prevState.skills || []), selectedSkill]; // Add skill if it doesn't exist
+
+      return {
+        skills: updatedSkills, // Update the skills array in the state
+      };
     });
   };
 
   handleFieldChange = (fieldName, event) => {
-    debugger;
     this.setState({ New_Skills : event.target.value });
   }
 
@@ -109,24 +101,71 @@ class Row extends React.Component {
 
     this.setState((prevState) => {
       // Avoid duplicates
-      const updatedSkills = prevState.Skills.includes(this.state.New_Skills)
-        ? prevState.Skills
-        : [...prevState.Skills, this.state.New_Skills];
+      const updatedSkills = prevState.skills.includes(this.state.New_Skills)
+        ? prevState.skills
+        : [...prevState.skills, this.state.New_Skills];
       
-      return { Skills: updatedSkills, New_Skills : "" }; // Update Skills directly
+      return { skills: updatedSkills, New_Skills : "" }; // Update Skills directly
     });
   }
 
   submitSkillsData = () => {
-        let Skills = {...this.Skills};
-        if(Skills){
-            this.props.submitSkillsDataParent();
+    debugger;
+        let skills = {...this.state.skills};
+        let id = this.state.id;
+        if(skills){
+          const payload = {
+            "userId": 1, 
+            "id" : id,
+            "skillData" : Object.values(skills)
+          };
+          this.setState({ loading: true })
+          axios.post(`http://localhost:5151/experience/addSkills`, payload)
+          .then(data => {
+            if(this.state.id === 0){
+              this.setState({id: data.data.id, skills: data.data.skillData});
+              if (this.props.enqueueSnackbar) {
+                this.props.enqueueSnackbar('Skills added successfully', {
+                  variant: 'success',
+                }); }
+                this.props.navigate('/language');
+               } else if(this.state.id === data.data.id){
+                this.setState({id: data.data.id, skills: data.data.skillData});
+                if (this.props.enqueueSnackbar) {
+                  this.props.enqueueSnackbar('skills updated successfully', {
+                    variant: 'success',
+                  }); }
+                  this.props.navigate('/language');
+              }
+              
+          })
+          .catch(error => {
+            const errorMessage = error.response?.data || 'An error occurred';
+            this.props.enqueueSnackbar(errorMessage, {
+              variant: 'error',
+            });
+          })
+          .finally(() => {
+            this.setState({ loading: false });
+          });
+            
         }
   }
 
-  render() {
-    const { open , Skills } = this.state;
+  componentDidUpdate(prevProps) {
+    if (prevProps.skillsList !== this.props.skillsList) {
+      this.setState({
+        skillData: this.props.skillsList,
+        skills : this.props.userSkills,
+        id : this.props.id,
+        // loading : this.props.loading
+      });
+    }
+  }
 
+  render() {
+    const { open , skills,skillData } = this.state;
+debugger;
     return (
       <React.Fragment>
         
@@ -142,7 +181,7 @@ class Row extends React.Component {
           </TableCell>
           <TableCell className={this.props.classes.tableCell} align="center"><div className={this.props.classes.iconWrapper}> 
           <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {Skills.map((skill, index) => (
+          {skills.map((skill, index) => (
             <Chip
               key={index}
               label={skill}
@@ -152,15 +191,15 @@ class Row extends React.Component {
           </div>
           </TableCell>
           <TableCell align="right">
-          <Tooltip title={Skills.length == 0 ? "Please Enter Skills" : "Submit"}>
+          <Tooltip title={skills.length == 0 ? "Please Enter Skills" : "Submit"}>
           <span>
-          <IconButton aria-label="fingerprint" color="success"   disabled={!Skills.length}>
+          <IconButton aria-label="fingerprint" color="success"   disabled={!skills.length}>
         <Fingerprint onClick={this.submitSkillsData } 
         />
       </IconButton>
       </span>
       </Tooltip>
-
+      <Loading loading={this.state.loading} {...this.props}/>
           </TableCell>
         </TableRow>
         <TableRow>
@@ -168,16 +207,16 @@ class Row extends React.Component {
             <Collapse in={open} timeout="auto" unmountOnExit>
                 &nbsp;
             <Stack direction="row" spacing={1}>
-        {this.state.skillData.map((chip) => (
-        <Chip
-          key={chip.key}
-          label={chip.label}
-          onClick={(chip)=>this.onSelectSkill(chip)}
-        />
-      ))}
+          {skillData.map((skill, index) => (
+          <Chip
+            key={index}          
+            label={skill}      
+            onClick={() => this.onSelectSkill(skill)}
+          />
+        ))}
          </Stack>
          <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {this.state.Skills.map((skill, index) => (
+          {skills.map((skill, index) => (
             <Chip
               key={index}
               label={skill}
@@ -232,39 +271,58 @@ class Skills extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      activeStep : 4
+      activeStep : 4,
+      skillsList : [],
+      userSkills : [],
+      id : 0,
+      // loading : true
     }
   }
 
-  backSummary = () => {
-    this.stepperRef.current.handleBack();
+  getSkills = () => {
+    this.setState({ loading: true });
+    axios.get(`http://localhost:5151/experience/getSkills`)
+    .then(response => {
+      this.setState({ skillsList: response.data});
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    }) .finally(() => {
+      this.setState({ loading: false });
+    });
   }
 
-  submitSkillsDataParent = () => {
-   if (this.props.enqueueSnackbar) {
-      this.props.enqueueSnackbar('Skills added successfully', {
-        variant: 'success',
-      }); }
-      this.props.navigate('/language');
-    // axios.put(`https://api.example.com/data/`, this.state.summary)
-    // .then(response => {
 
-    //   this.setState({ data: response.data, loading: false });
-    //   console.log('Data updated successfully:', response.data);
-    // })
-    // .catch(error => {
-    //   // // Handle error
-    //   // this.setState({ error: error.message, loading: false });
-    //   // console.error('Error updating data:', error);
-    // });
+  componentDidMount(){
+    debugger;
+    this.setState({ loading: true });
+    this.getSkills();
+    axios.post(`http://localhost:5151/experience/getSkillData/1`)
+    .then(response => {
+      this.setState({ userSkills: (response.data.skillData || []), id:response.data.id });
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+    .finally(() => {
+      this.setState({ loading: false });
+    });
   }
 
   render() {
+    const {skillsList,userSkills,id,loading} = this.state;
     return (
       <Card >
       {/* <CardActionArea > */}
       <CardContent sx={{maxWidth: '100%', width: '93%', height: '65%', boxShadow: 10, marginLeft : '2%', marginTop: '3%', position:'fixed', overflowY: 'auto'}}>
         <LinearStepper  activeStep={this.state.activeStep}/>
+        {/* <Loading loading={loading} {...this.props}/> */}
       <TableContainer component={Paper} >
         <Table aria-label="collapsible table">
           <TableHead  sx = {{backgroundColor : '#e0e0d1'}} >
@@ -279,8 +337,10 @@ class Skills extends React.Component {
           <TableBody>
             {rows.map((row) => (
               <Row key={row.name} row={row} 
-              submitSkillsDataParent = {this.submitSkillsDataParent}
-              backSummary = {this.backSummary}
+              skillsList = {skillsList}
+              userSkills = {userSkills}
+              id = {id}
+              // loading = {loading}
               {...this.props}
               />
             ))}
