@@ -38,36 +38,35 @@ class Row extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      open: true,
       loading: false,
       row : {
-        open: props.row.Id === 0 ? true : false,
-        Id : props.row.Id,
-        College: props.row.College,
-        Course: props.row.Course,
-        Program: props.row.Program,
-        StartDate: props.row.StartDate,
-        EndDate : props.row.EndDate,
-        CGPA: props.row.CGPA,
-        Specalization: props.row.Specalization,
+        open: props.row.id === 0 ? true : false,
+        id : props.row.id,
+        college: props.row.college,
+        course: props.row.course,
+        program: props.row.program,
+        startDate: props.row.startDate,
+        endDate : props.row.endDate,
+        cgpa: props.row.cgpa,
+        specalization: props.row.specalization,
         Validations: {
-          "IsCollege": true,
-          "IsCourse": true,
-          "IsProgram": true,
-          "IsStartDate": true,
-          "IsEndDate": true,
-          "IsCGPA": true,
-          "IsSpecalization": true
+          "Iscollege": true,
+          "Iscourse": true,
+          "Isprogram": true,
+          "IsstartDate": true,
+          "IsendDate": true,
+          "Iscgpa": true,
+          "Isspecalization": true
         }
       },
       ErrorMsg: {
-        College: "",
-        Course: "",
-        Program: "",
-        StartDate: "",
-        EndDate: "",
-        CGPA: "",
-        Specalization: ""
+        college: "",
+        course: "",
+        program: "",
+        startDate: "",
+        endDate: "",
+        cgpa: "",
+        specalization: ""
       }
     };
     
@@ -106,8 +105,63 @@ class Row extends React.Component {
     let row = {...this.state.row};
     let ErrorMsg = {...this.state.ErrorMsg};
     debugger;
-    if(row.College && row.Course && row.Program && row.StartDate && row.EndDate && row.CGPA && row.Specalization)
-    {
+    if(row.college && row.course && row.program && row.startDate && row.endDate && row.cgpa && row.specalization)
+    { const payload = {
+      "userId": 1, 
+      "id" : row.id,
+      "college": row.college,
+      "course": row.course,
+      "program" : row.program,
+      "startDate" : row.startDate,
+      "endDate" : row.endDate,
+      "cgpa" : row.cgpa,
+      "specalization" : row.specalization
+    };
+    this.setState({ loading: true })
+    axios.post(`http://localhost:5151/experience/addExperience`, payload)
+    .then(data => {
+      if(row.id === 0){
+        row.open = false;
+        row.id = data.data.id;
+        row.company = data.data.company;
+        row.designation = data.data.designation;
+        row.location = data.data.location;
+        row.experience = data.data.experience;
+        row.skills = data.data.skills;
+        row.tasks = data.data.tasks;
+        this.setState({row});
+        if (this.props.enqueueSnackbar) {
+          this.props.enqueueSnackbar('experience added successfully', {
+            variant: 'success',
+          }); }
+        this.props.updateTableData(row);
+         } else if(row.id === data.data.id){
+          row.open = false;
+          row.id = data.data.id;
+          row.company = data.data.company;
+          row.designation = data.data.designation;
+          row.location = data.data.location;
+          row.experience = data.data.experience;
+          row.skills = data.data.skills;
+          row.tasks = data.data.tasks;
+          this.setState({row});
+          if (this.props.enqueueSnackbar) {
+            this.props.enqueueSnackbar('experience updated successfully', {
+              variant: 'success',
+            }); }
+          this.props.updateTableData(row);
+        }
+        
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+    .finally(() => {
+      this.setState({ loading: false });
+    });
       row.Id = 1;
       if (this.props.enqueueSnackbar) {
         this.props.enqueueSnackbar('Education added successfully', {
@@ -119,33 +173,33 @@ class Row extends React.Component {
       this.setState({ row }); // Update the state to reflect the change
     }
     else{
-      if (row.College === "" || row.College === null) {
-        row.Validations.IsCollege = false;
-        ErrorMsg.College = "College cannot be empty";
+      if (row.college === "" || row.college === null) {
+        row.Validations.Iscollege = false;
+        ErrorMsg.college = "college cannot be empty";
       }
-      if(row.Course === "" || row.Course === null){
-        row.Validations.IsCourse = false;
-        ErrorMsg.Course = "Course cannot be empty";
+      if(row.course === "" || row.course === null){
+        row.Validations.Iscourse = false;
+        ErrorMsg.course = "course cannot be empty";
       }
-      if(row.Program === "" || row.Program === null){
-        row.Validations.IsProgram = false;
-        ErrorMsg.Program = "Program cannot be empty";
+      if(row.program === "" || row.program === null){
+        row.Validations.Isprogram = false;
+        ErrorMsg.program = "program cannot be empty";
       }
-      if(row.StartDate === "" || row.StartDate === null){
-        row.Validations.IsStartDate = false;
-        ErrorMsg.StartDate = "StartDate cannot be empty";
+      if(row.startDate === "" || row.startDate === null){
+        row.Validations.IsstartDate = false;
+        ErrorMsg.startDate = "startDate cannot be empty";
       }
-      if(row.EndDate === "" || row.EndDate === null){
-        row.Validations.IsEndDate = false;
-        ErrorMsg.EndDate = "EndDate cannot be empty";
+      if(row.endDate === "" || row.endDate === null){
+        row.Validations.IsendDate = false;
+        ErrorMsg.endDate = "endDate cannot be empty";
       }
-      if(row.CGPA === "" || row.CGPA === null){
-        row.Validations.IsCGPA = false;
-        ErrorMsg.CGPA = "CGPA cannot be empty";
+      if(row.cgpa === "" || row.cgpa === null){
+        row.Validations.Iscgpa = false;
+        ErrorMsg.cgpa = "cgpa cannot be empty";
       }
-      if(row.Specalization === "" || row.Specalization === null){
-        row.Validations.IsSpecalization = false;
-        ErrorMsg.Specalization = "Specalization cannot be empty";
+      if(row.specalization === "" || row.specalization === null){
+        row.Validations.Isspecalization = false;
+        ErrorMsg.specalization = "specalization cannot be empty";
       }
       this.setState({ row });
     }
@@ -166,14 +220,14 @@ class Row extends React.Component {
               {row.open ? <Tooltip title="Close"><KeyboardArrowUpIcon /></Tooltip> : <Tooltip title="Expand"><KeyboardArrowDownIcon /></Tooltip>}
             </IconButton>
           </TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.College}</div></TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.Course}</div></TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.Program}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.college}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.course}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.program}</div></TableCell>
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> 
           <Chip
-              label={row.StartDate ?
+              label={row.startDate ?
                 <Moment format={"DD-MMM-YYYY"}>
-                  {row.StartDate}
+                  {row.startDate}
                 </Moment>
                 : ''}
               variant="filled" />
@@ -181,16 +235,16 @@ class Row extends React.Component {
           </TableCell>  
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> 
           <Chip
-              label={row.EndDate ?
+              label={row.endDate ?
                 <Moment format={"DD-MMM-YYYY"}>
-                  {row.EndDate}
+                  {row.endDate}
                 </Moment>
                 : ''}
               variant="filled" />
               </div>
           </TableCell>
-          <TableCell className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.CGPA}</div></TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.Specalization}</div></TableCell>
+          <TableCell className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.cgpa}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.specalization}</div></TableCell>
           <TableCell align="right" className={this.props.classes.tableCell}>
           <Tooltip title="Delete">
             <span>
@@ -217,88 +271,76 @@ class Row extends React.Component {
        <div className="row" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
             <div className="col-md-2 pull-left">
           <TextField
-            error={!this.state.row.Validations.IsCollege}
+            error={!this.state.row.Validations.Iscollege}
             required
             id="component-error"
             variant="standard"
-            label="College Name"
+            label="college Name"
             sx={{ width: 250 }}
-            value={row.College}
-            // helperText={ErrorMsg.College}
-            onChange={(e) => this.handleFieldChange("College", e)}
+            value={row.college}
+            // helperText={ErrorMsg.college}
+            onChange={(e) => this.handleFieldChange("college", e)}
             inputProps={{ maxLength: 50 }}
           />
           </div>
         <div className="col-md-2 pull-left">
           <TextField
-            error={!this.state.row.Validations.IsCourse}
+            error={!this.state.row.Validations.Iscourse}
             required
             id="component-error"
             variant="standard"
-            label="Course"
+            label="course"
             sx={{ width: 250 }}
-            value={row.Course}
-            // helperText={ErrorMsg.Course}
-            onChange={(e) => this.handleFieldChange("Course", e)}
+            value={row.course}
+            // helperText={ErrorMsg.course}
+            onChange={(e) => this.handleFieldChange("course", e)}
             inputProps={{ maxLength: 50 }}
           />
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.IsProgram}
+           error={!this.state.row.Validations.Isprogram}
            required
             id="component-error"
             variant="standard"
-            label="Program"
+            label="program"
             sx={{ width: 250 }}
-            value={row.Program}
-            // helperText={ErrorMsg.Program}
-            onChange={(e) => this.handleFieldChange("Program", e)}
+            value={row.program}
+            // helperText={ErrorMsg.program}
+            onChange={(e) => this.handleFieldChange("program", e)}
             inputProps={{ maxLength: 50 }}
           />
         </div>
         <div className="col-md-2 pull-left">
 
         <DatePicker
-        label = {"StartDate"}
+        label = {"startDate"}
         handleDate = {this.handleDate}
         {...this.props}
       />
         </div>
         <div className="col-md-2 pull-left">
         <DatePicker
-        label = {"EndDate"}
+        label = {"endDate"}
         handleDate = {this.handleDate}
         {...this.props}
       />
-          {/* <TextField
-           error={!this.state.row.Validations.IsEndDate}
-           required
-            id="component-error"
-            variant="standard"
-            label="End Date"
-            sx={{ width: 250 }}
-            value={row.EndDate}
-            helperText={ErrorMsg.IsEndDate}
-            onChange={(e) => this.handleFieldChange("EndDate", e)}
-            inputProps={{ maxLength: 15 }}
-          /> */}
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.IsCGPA}
+           error={!this.state.row.Validations.Iscgpa}
            required
             id="component-error"
             variant="standard"
-            label="CGPA"
+            label="cgpa"
             sx={{ width: 250 }}
-            value={row.CGPA}
-            // helperText={ErrorMsg.CGPA}
+            value={row.cgpa}
+            // helperText={ErrorMsg.cgpa}
             onChange={(e) => {
               const { value } = e.target;
               // Allow input only if it's a number or empty (to allow deletion)
               if (/^\d*\.?\d*$/.test(value)) {
-                this.handleFieldChange("CGPA", e);  // Update only if valid
+                this.handleFieldChange("cgpa", e);  // Update only if valid
               }
             }}
             inputProps={{
@@ -310,15 +352,15 @@ class Row extends React.Component {
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.IsSpecalization}
+           error={!this.state.row.Validations.Isspecalization}
            required
             id="component-error"
             variant="standard"
-            label="Specalization"
+            label="specalization"
             sx={{ width: 250 }}
-            value={row.Specalization}
-            // helperText={ErrorMsg.Specalization}
-            onChange={(e) => this.handleFieldChange("Specalization", e)}
+            value={row.specalization}
+            // helperText={ErrorMsg.specalization}
+            onChange={(e) => this.handleFieldChange("specalization", e)}
             inputProps={{ maxLength: 15 }}
           />
         </div>
@@ -404,13 +446,13 @@ class Education extends React.Component {
         let row = {
           open: true,
           Id : 0,
-          College: "",
-          Course: "",
-          Program: "",
-          StartDate: "",
-          EndDate: "",
-          CGPA: "",
-          Specalization: ""
+          college: "",
+          course: "",
+          program: "",
+          startDate: "",
+          endDate: "",
+          cgpa: "",
+          specalization: ""
         }
         this.state.rows.unshift(row)
         this.setState({
@@ -431,13 +473,13 @@ class Education extends React.Component {
           <TableHead className={` ${this.props.classes.tableHeaderRow}`}>
             <TableRow >
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`} ><div className={this.props.classes.iconWrapper}> <Tooltip title="College"><SchoolIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Course"><AutoStoriesIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Program"><LocalLibraryIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="StartDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="EndDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="CGPA"><StarIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Specalization"><FolderSpecialIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`} ><div className={this.props.classes.iconWrapper}> <Tooltip title="college"><SchoolIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="course"><AutoStoriesIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="program"><LocalLibraryIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="startDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="endDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="cgpa"><StarIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="specalization"><FolderSpecialIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               {/* <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Tasks"></Tooltip></TableCell> */}
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}> 
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
