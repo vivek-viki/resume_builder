@@ -23,7 +23,28 @@ import GppGoodIcon from '@mui/icons-material/GppGood';
 import { useStyles } from '../../shared/styles/defaultStyle';
 import Chip from '@mui/material/Chip';
 import InputFileUpload from '../../shared/uploaddoc';
+import Loading from "../../shared/loading";
 
+const getMimeType = (fileExtension) => {
+  switch (fileExtension.toLowerCase()) {
+    case 'pdf':
+      return 'application/pdf';
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'doc':
+      return 'application/msword';
+    case 'docx':
+      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    case 'xlsx':
+      return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    // Add more mappings as needed for other file types
+    default:
+      return '';  // Handle unsupported types (optional)
+  }
+};
 
 function createData(name, calories, fat, carbs, protein, price) {
   return {
@@ -55,7 +76,10 @@ class Row extends React.Component {
       open: true,
       New_Skills : [],
       loading: false,
-      selection : [],
+      selection : this.props.selection || [],
+      id: 0,
+      fileURL: null,
+      fileType: '',
     };
   }
 
@@ -73,7 +97,50 @@ class Row extends React.Component {
     }));
   };
 
-  handleCertificateDelete = (fileNameToDelete) => {
+  handleCertificateDelete = (id,fileNameToDelete) => {
+    debugger;
+    if(id){
+      this.setState({ loading: true });
+      axios.delete(`http://localhost:5153/certificates/deleteCertificate/${id}`)
+      .then(response => {
+        if (response.status === 200) {
+          // Filter out the deleted certificate from the selection
+          const updatedSelection = this.state.selection.filter(
+            (chip) => chip.id !== id // Ensure you're comparing the correct property
+          );
+  
+          this.setState({ selection: updatedSelection, loading: false }, () => {
+            // Optionally, you can log the updated selection for debugging
+            console.log("Updated Selection:", this.state.selection);
+          });
+  
+          // Show success message
+          if (this.props.enqueueSnackbar) {
+            this.props.enqueueSnackbar('Certificate deleted successfully', {
+              variant: 'success',
+            });
+          }
+        } else {
+          // Handle unexpected response status
+          this.setState({ loading: false });
+          if (this.props.enqueueSnackbar) {
+            this.props.enqueueSnackbar('Error deleting certificate', {
+              variant: 'error',
+            });
+          }
+        }
+      })
+      .catch(error => {
+        const errorMessage = error.response?.data || 'An error occurred';
+        this.props.enqueueSnackbar(errorMessage, {
+          variant: 'error',
+        });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
+    }
+    else{
     // Filter out the file with the matching file name
     const updatedSelection = this.state.selection.filter(
       (chip) => chip.fileName !== fileNameToDelete
@@ -81,6 +148,7 @@ class Row extends React.Component {
   
     // Update the state with the new selection array
     this.setState({ selection: updatedSelection });
+    }
   };
 
   onSelectSkill = (event) => {
@@ -97,7 +165,6 @@ class Row extends React.Component {
   };
 
   handleFieldChange = (fieldName, event) => {
-    debugger;
     this.setState({ New_Skills : event.target.value });
   }
 
@@ -113,37 +180,141 @@ class Row extends React.Component {
     });
   }
 
-  submitCertificates = () => {
-        let selection = {...this.state};
-        if(selection){
-            this.props.submitCertificatesParent();
-        }
+  componentWillUnmount() {
+    if (this.state.fileURL) {
+      URL.revokeObjectURL(this.state.fileURL);
+    }
   }
 
-  handleFieldChange = (files) => {
-    let selection = {...this.state};
-    const updatedFiles = files.map((file) => ({
-        file: file.file,                  // Store the actual file object if needed
-        fileName: file.fileName,          // Store the file name
-        fileExtension: file.fileExtension // Store the file extension
-    }));
+  handleViewFile = (certificate) => {
+    const byteCharacters = atob(certificate.fileContent);  // Decode Base64 content
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: certificate.fileType });
+    const fileURL = URL.createObjectURL(blob);
 
-    selection = updatedFiles;
-
-    this.setState({ selection });
-  }
-
-  handleFileView = (file) => {
-    const fileURL = URL.createObjectURL(file);
-    window.open(fileURL, '_blank'); // Open the file in a new tab
+    // Open the file in a new tab
+    const newWindow = window.open(fileURL, '_blank');
+    if (!newWindow) {
+      alert('Please allow popups for this website to view the file.');
+    }
   };
+
+  fetchFile =async (fileId, file) => {
+    try {
+      if(fileId){
+      // Make the axios request to fetch the file as a blob
+      const response = await axios.get(`http://localhost:5153/certificates/getCertificates/files/${fileId}`, {
+        responseType: 'blob',  // Important: Fetch the file as binary data (blob)
+      });
+  
+      // Create a URL for the file Blob
+      const fileBlob = new Blob([response.data], { type: response.headers['content-type'] });
+      const fileURL = URL.createObjectURL(fileBlob);
+  
+      // Open the file in a new window
+      const newWindow = window.open(fileURL);
+      
+      if (!newWindow) {
+        alert('Please allow popups for this website to view the file.');
+      }
+  
+      // Optionally, update the state if you want to keep track of the file URL and type
+      this.setState({
+        fileURL: fileURL,
+        fileType: response.headers['content-type'],
+      });
+  
+      // Clean up the URL after use (optional, but recommended)
+      newWindow.onload = () => {
+        URL.revokeObjectURL(fileURL);  // Clean up the URL to free memory
+      };
+  
+    }else{
+      const fileURL = URL.createObjectURL(file);
+      window.open(fileURL, '_blank'); // Open the file in a new tab
+    }
+  }catch (error) {
+    const errorMessage = error.response?.data || 'An error occurred';
+    this.props.enqueueSnackbar(errorMessage, {
+      variant: 'error',
+    });
+    }
+  };
+  
+
+  submitCertificates = () => {
+    let selection = {...this.state.selection};
+    if(selection){
+      this.setState({ loading: true });
+      const formData = new FormData();
+      formData.append('userId', 1);
+      formData.append('id', this.state.id);
+      formData.append('fileType', getMimeType(selection[0].fileExtension));
+      formData.append('fileName', selection[0].fileName);
+      formData.append('file', selection[0].file);
+      axios.post(`http://localhost:5153/certificates/addCertificates`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      .then(response => {
+        if(response.data == 0){
+        if (this.props.enqueueSnackbar) {
+          this.props.enqueueSnackbar('Certificates added successfully', {
+            variant: 'success',
+          }); }
+          this.props.navigate('/projects');
+        }
+        if(response.data == -1){
+          if (this.props.enqueueSnackbar) {
+            this.props.enqueueSnackbar('Certificates updated successfully', {
+              variant: 'success',
+            }); }
+            this.props.navigate('/projects');
+          }
+      })
+      .catch(error => {
+        const errorMessage = error.response?.data || 'An error occurred';
+        this.props.enqueueSnackbar(errorMessage, {
+          variant: 'error',
+        });
+      });
+  }
+}
+
+handleFieldChange = (files) => {
+  // Use the previous state to avoid replacing existing selection
+  this.setState((prevState) => {
+      const updatedFiles = files.map((file) => ({
+          file: file.file,                  // Store the actual file object
+          fileName: file.fileName,          // Store the file name
+          fileExtension: file.fileExtension  // Store the file extension
+      }));
+
+      // Combine the previous selection with the new updated files
+      const selection = [...prevState.selection, ...updatedFiles];
+
+      return { selection }; // Update the state with the combined selection
+  });
+};
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.selection !== this.props.selection) {
+      this.setState({
+        selection : this.props.selection
+      });
+    }
+  }
 
   render() {
     const { open,selection } = this.state;
-
     return (
       <React.Fragment>
-        
+              <Loading loading={this.state.loading} {...this.props}/>
         <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
           <TableCell>
             <IconButton
@@ -167,7 +338,7 @@ class Row extends React.Component {
        variant="outlined" 
        hidden={!chip.fileName} 
        label={chip.fileName} 
-       onClick={() => this.handleFileView(chip.file)}
+       onClick={()=>this.fetchFile(chip.id, chip.file)}
        color="primary" />
       ))}
           
@@ -175,13 +346,6 @@ class Row extends React.Component {
           </TableCell>
           <TableCell align="right"></TableCell>
           <TableCell align="right">
-          {/* <Tooltip title="Back">
-            <span>
-        <IconButton aria-label="fingerprint" color="secondary" disabled='true'>
-          <Fingerprint onClick={this.props.backSummary } />
-        </IconButton>
-        </span>
-        </Tooltip> */}
           <Tooltip title={selection.length == 0 ? "Please upload Certificates": "Submit"}>
           <span>
           <IconButton aria-label="fingerprint" color="success"   disabled={!selection.length}>
@@ -201,7 +365,7 @@ class Row extends React.Component {
             handleFileChange = {this.handleFieldChange}
             {...this.props}/>
               {this.state.selection.map((chip) => (
-       <Chip sx={{ marginLeft: "1%" }} className={`mx-3 ${this.props.classes.formField}`} variant="outlined" hidden={!chip.fileName} label={chip.fileName} color="primary" onDelete={() => this.handleCertificateDelete(chip.fileName)}/>
+       <Chip sx={{ marginLeft: "1%" }} className={`mx-3 ${this.props.classes.formField}`} variant="outlined" hidden={!chip.fileName} label={chip.fileName} color="primary" onDelete={() => this.handleCertificateDelete(chip.id,chip.fileName)}/>
       ))}
           
             </Collapse>
@@ -222,34 +386,31 @@ class Certificates extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      activeStep : 6
+      activeStep : 6,
+      selection : [],
     }
   }
 
-  backSummary = () => {
-    this.stepperRef.current.handleBack();
+  componentDidMount(){
+    this.setState({ loading: true });
+    axios.get(`http://localhost:5153/certificates/getCertificates/1`)
+    .then(response => {
+      this.setState({ selection: response.data, loading: false });
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+    .finally(() => {
+      this.setState({ loading: false });
+    });
   }
 
-  submitCertificatesParent = () => {
-   if (this.props.enqueueSnackbar) {
-      this.props.enqueueSnackbar('Certificates added successfully', {
-        variant: 'success',
-      }); }
-      this.props.navigate('/projects');
-    // axios.put(`https://api.example.com/data/`, this.state.summary)
-    // .then(response => {
-
-    //   this.setState({ data: response.data, loading: false });
-    //   console.log('Data updated successfully:', response.data);
-    // })
-    // .catch(error => {
-    //   // // Handle error
-    //   // this.setState({ error: error.message, loading: false });
-    //   // console.error('Error updating data:', error);
-    // });
-  }
 
   render() {
+    const {selection} = this.state;
     return (
       <Card >
       {/* <CardActionArea > */}
@@ -264,13 +425,13 @@ class Certificates extends React.Component {
         <GppGoodIcon sx={{ color: 'grey' }} />
       </Tooltip>
     </TableCell>
+    <Loading loading={this.state.loading} {...this.props}/>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row) => (
-              <Row key={row.name} row={row} 
-              submitCertificatesParent = {this.submitCertificatesParent}
-              backSummary = {this.backSummary}
+              <Row key={row.id} row={row} 
+              selection = {selection}
               {...this.props}
               />
             ))}

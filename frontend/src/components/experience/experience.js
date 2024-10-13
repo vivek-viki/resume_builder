@@ -600,6 +600,7 @@ class Experience extends React.Component {
         />
       </IconButton>
       </Tooltip>
+      <Loading loading={this.state.loading} {...this.props}/>
   </div>
           </TableCell>
             </TableRow>
