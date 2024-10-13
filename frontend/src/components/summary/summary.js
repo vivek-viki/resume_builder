@@ -59,7 +59,6 @@ class Row extends React.Component {
   }
 
   componentDidMount(){
-    debugger;
     this.setState({ loading: true });
     axios.post(`http://localhost:5150/summary/getSummary/1`)
     .then(response => {
@@ -85,7 +84,6 @@ class Row extends React.Component {
   }
 
   submitSummary = () => {
-    debugger;
     const payload = {
       "userId": 1, 
       "summary": this.state.summary 
@@ -129,19 +127,8 @@ class Row extends React.Component {
               {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
             </IconButton>
           </TableCell>
-          {/* <TableCell className={this.props.classes.tableCell}></TableCell> */}
-          {/* <TableCell className={this.props.classes.tableCell}></TableCell> */}
           <TableCell className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{summary}</div></TableCell>
-          {/* <TableCell className={this.props.classes.tableCell}></TableCell> */}
-          {/* <TableCell className={this.props.classes.tableCell}></TableCell> */}
           <TableCell className={this.props.classes.tableCell} align = "right">
-          {/* <Tooltip title="Back">
-            <span>
-        <IconButton aria-label="fingerprint" color="secondary" disabled='true'>
-          <Fingerprint onClick={this.props.backSummary } />
-        </IconButton>
-        </span>
-        </Tooltip> */}
           <Tooltip title={isSummaryEmpty ? "Please Enter Summary" : "Submit"}>
           <span>
           <IconButton aria-label="fingerprint" color="success"   disabled={!summary}>

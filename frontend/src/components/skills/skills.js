@@ -165,7 +165,6 @@ class Row extends React.Component {
 
   render() {
     const { open , skills,skillData } = this.state;
-debugger;
     return (
       <React.Fragment>
         
@@ -297,7 +296,6 @@ class Skills extends React.Component {
 
 
   componentDidMount(){
-    debugger;
     this.setState({ loading: true });
     this.getSkills();
     axios.post(`http://localhost:5151/experience/getSkillData/1`)
@@ -332,6 +330,7 @@ class Skills extends React.Component {
         <AddRoadIcon sx={{ color: 'grey' }} />
       </Tooltip>
     </TableCell>
+    <Loading loading={this.state.loading} {...this.props}/>
             </TableRow>
           </TableHead>
           <TableBody>

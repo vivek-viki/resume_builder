@@ -31,16 +31,43 @@ class InputFileUpload extends Component {
       file: file,
       fileName: file.name,
       fileExtension: file.name.split('.').pop(),
+      fileSize: file.size // Include size to help distinguish between files
     }));
-    // Append the new selection to the existing state
-  this.setState((prevState) => ({
-    selection: [...prevState.selection, ...newSelection]  // Combine previous files with new ones
-  }));
+  
+    // Filter out files that are already in the selection
+    const filteredNewSelection = newSelection.filter(newFile => {
+      return !this.state.selection.some(existingFile =>
+        existingFile.fileName === newFile.fileName && existingFile.fileSize === newFile.fileSize
+      );
+    });
+  
+    // Update the state with unique new files
+    this.setState(prevState => ({
+      selection: [...prevState.selection, ...filteredNewSelection] // Combine previous files with unique new ones
+    }));
+  
+    // Pass the updated selection to the parent component
+    this.props.handleFileChange(filteredNewSelection); // Pass only the unique new files to the parent
+  };
+  
+  
 
-  // Pass the updated selection to the parent component if needed
-  this.props.handleFileChange([...this.state.selection, ...newSelection]);
+  // handleFileChange = (event) => {
+  //   const files = Array.from(event.target.files); // Convert FileList to an array
+  //   const newSelection = files.map((file) => ({
+  //     file: file,
+  //     fileName: file.name,
+  //     fileExtension: file.name.split('.').pop(),
+  //   }));
+  //   // Append the new selection to the existing state
+  // this.setState((prevState) => ({
+  //   selection: [...prevState.selection, ...newSelection]  // Combine previous files with new ones
+  // }));
+
+  // // Pass the updated selection to the parent component if needed
+  // this.props.handleFileChange([...this.state.selection, ...newSelection]);
    
-   };
+  //  };
   render() {
     return (
       <Button
