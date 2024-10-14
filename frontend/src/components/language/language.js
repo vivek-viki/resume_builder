@@ -271,7 +271,7 @@ class Language extends React.Component {
 
     componentDidMount(){
       this.setState({ loading: true });
-      axios.post(`http://localhost:5153/language/getLanguage/1`)
+      axios.get(`http://localhost:5153/language/getLanguage/1`)
       .then(response => {
         this.setState({ rows: response.data});
       })

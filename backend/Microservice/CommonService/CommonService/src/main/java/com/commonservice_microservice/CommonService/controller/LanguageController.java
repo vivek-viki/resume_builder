@@ -46,7 +46,7 @@ public class LanguageController {
     }
 
 
-    @PostMapping("/getLanguage/{userId}")
+    @GetMapping("/getLanguage/{userId}")
     public ResponseEntity<?> getLanguage(@PathVariable int userId){
         try {
             List<Language> data = languageService.getLanguage(userId);

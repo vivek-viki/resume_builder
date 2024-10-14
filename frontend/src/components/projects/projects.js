@@ -29,34 +29,34 @@ import DatePicker from '../../shared/datePicker';
 import DescriptionIcon from '@mui/icons-material/Description';
 import Moment from "react-moment";
 import Chip from '@mui/material/Chip';
+import Loading from '../../shared/loading';
+import dayjs from 'dayjs';
 
 
 class Row extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      open: true,
       loading: false,
-      task : '',
       row : {
-        open: props.row.Id === 0 ? true : false,
-        Id: props.row.Id,
-        Project_Name: props.row.Project_Name,
-        StartDate: props.row.StartDate,
-        EndDate: props.row.EndDate,
-        Description : props.row.Description,
-        Validations: {
-          "IsProject_Name": true,
-          "IsStartDate": true,
-          "IsEndDate": true,
-          "IsDescription": true
-        }
+        open: props.row.id === 0 ? true : false,
+        id: props.row.id,
+        projectName: props.row.projectName,
+        startDate: props.row.startDate,
+        endDate: props.row.endDate,
+        description : props.row.description,
+      },
+      Validations: {
+        "IsProjectName": true,
+        "IsStartDate": true,
+        "IsEndDate": true,
+        "IsDescription": true
       },
       ErrorMsg: {
-        Project_Name: "",
-        StartDate: "",
-        EndDate: "",
-        Description: ""
+        projectName: "",
+        startDate: "",
+        endDate: "",
+        description: ""
       },
     };
     
@@ -65,108 +65,147 @@ class Row extends React.Component {
   handleClick = (event) => {
     let row = { ...this.state.row }
     row.open = event;
-    if (row.Id !== 0)
+    // if (row.Id !== 0)
     this.setState({ row  });
   };
 
 
-  handleDelete = (chipToDelete) => {
-    this.setState((prevState) => ({
-      row: {
-        ...prevState.row,
-        Skills: prevState.row.Skills.filter((skill) => skill !== chipToDelete) // Filter by skill
-      }
-    }));
-  };
-
-  onSelectSkill = (chips) => {
-    let selectedSkill = chips.target.innerText;
-    this.setState((prevState) => ({
-      row: {
-        ...prevState.row,
-        Skills: prevState.row.Skills.includes(selectedSkill)
-          ? prevState.row.Skills
-          : [...prevState.row.Skills, selectedSkill] // Avoid duplicates
-      }
-    }));
+  formatDateToYYYYMMDD = (date) => {
+    if (!date) {
+      return null; // If date is empty, return null
+    }
+  
+    const parsedDate = new Date(date);
+  
+    // Check if the date is valid
+    if (isNaN(parsedDate.getTime())) {
+      console.error("Invalid date:", date);
+      return null; // Return null for invalid date
+    }
+  
+    const year = parsedDate.getFullYear();
+    const month = ('0' + (parsedDate.getMonth() + 1)).slice(-2); // Add leading 0 if needed
+    const day = ('0' + parsedDate.getDate()).slice(-2); // Add leading 0 if needed
+  
+    return `${year}-${month}-${day}`; // Format as YYYY-MM-DD
   }
-
-  handleOnTaskChange = (task) => {
-    let row = {...this.state.row};
-    row.Tasks = task;
-    this.setState({ row});
-  }
+  
 
   submitProjects = () => {
     let row = {...this.state.row};
     let ErrorMsg = {...this.state.ErrorMsg};
+    let Validations = {...this.state.Validations};
     debugger;
-    if(row.Project_Name && row.StartDate && row.EndDate && row.Description)
+    if(row.projectName && row.startDate && row.endDate && row.description)
     {
-        row.Id = 1;
-        if (this.props.enqueueSnackbar) {
-          this.props.enqueueSnackbar('Experience added successfully', {
-            variant: 'success',
-            row
-          }); }
-        this.props.submitProjectsParent(row);
-        row.open = false; // Set open to false to collapse the row
-        this.setState({ row }); // Update the state to reflect the change
+      const payload = {
+        "userId": 1, 
+        "id" : row.id,
+        "projectName": row.projectName,
+        "startDate": row.startDate ? this.formatDateToYYYYMMDD(row.startDate) : null, // Format date to DD-MM-YYYY
+        "endDate" : row.endDate ? this.formatDateToYYYYMMDD(row.endDate) : null,
+        "description" : row.description
+      };
+      this.setState({ loading: true })
+      axios.post(`http://localhost:5153/projects/addProject`, payload)
+      .then(data => {
+        if(row.id === 0){
+          row.open = false;
+          row.id = data.data.id;
+          row.projectName = data.data.projectName;
+          row.startDate = data.data.startDate;
+          row.endDate = data.data.endDate;
+          row.description = data.data.description;
+          this.setState({row});
+          if (this.props.enqueueSnackbar) {
+            this.props.enqueueSnackbar('project added successfully', {
+              variant: 'success',
+            }); }
+          this.props.updateTableData(row);
+           } else if(row.id === data.data.id){
+            row.open = false;
+            row.id = data.data.id;
+            row.projectName = data.data.projectName;
+            row.startDate = data.data.startDate;
+            row.endDate = data.data.endDate;
+            row.description = data.data.description;
+            this.setState({row});
+            if (this.props.enqueueSnackbar) {
+              this.props.enqueueSnackbar('project updated successfully', {
+                variant: 'success',
+              }); }
+            this.props.updateTableData(row);
+          }
+          
+      })
+      .catch(error => {
+        const errorMessage = error.response?.data || 'An error occurred';
+        this.props.enqueueSnackbar(errorMessage, {
+          variant: 'error',
+        });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
     }
     else{
-      if (row.Project_Name === "" || row.Project_Name === null) {
-        row.Validations.IsProject_Name = false;
-        ErrorMsg.Project_Name = "ProjectName cannot be empty";
+      if (row.projectName === "" || row.projectName === null) {
+        Validations.IsProjectName = false;
+        ErrorMsg.projectName = "ProjectName cannot be empty";
       }
-      if(row.StartDate === "" || row.StartDate === null){
-        row.Validations.IsStartDate = false;
-        ErrorMsg.StartDate = "StartDate cannot be empty";
+      if(row.startDate === "" || row.startDate === null){
+        Validations.IsStartDate = false;
+        ErrorMsg.startDate = "StartDate cannot be empty";
       }
-      if(row.EndDate === "" || row.EndDate === null){
-        row.Validations.IsEndDate = false;
-        ErrorMsg.EndDate = "StartDate cannot be empty";
+      if(row.endDate === "" || row.endDate === null){
+        Validations.IsEndDate = false;
+        ErrorMsg.endDate = "EndDate cannot be empty";
       }
-      if(row.Description === "" || row.Description === null){
-        row.Validations.IsDescription = false;
-        ErrorMsg.Description = "Description cannot be empty";
+      if(row.description === "" || row.description === null){
+        Validations.IsDescription = false;
+        ErrorMsg.description = "Description cannot be empty";
       }
-      this.setState({ row });
+      this.setState({ row, Validations });
     }
     this.setState({ ErrorMsg });
   }
 
   handleFieldChange = (fieldName, event) => {
+    debugger;
     let row = { ...this.state.row };
     let ErrorMsg = { ...this.state.ErrorMsg };
-    row[fieldName] = event.target.value.trimStart();
+    let Validations = {...this.state.Validations};
+    const value = event.target.value; // Store full value (including spaces)
+  const trimmedValue = value.trim(); // Trimmed value for validation purposes
+  row[fieldName] = value;
   
-    if (event.target.value) {
-      row.Validations[`Is${fieldName}`] = true;
+    if (trimmedValue) {
+      Validations[`Is${fieldName}`] = true;
       ErrorMsg[fieldName] = "";
     } else {
-      row.Validations[`Is${fieldName}`] = false;
+      Validations[`Is${fieldName}`] = false;
       ErrorMsg[fieldName] = `${fieldName} cannot be empty`;
     }
   
-    this.setState({ row, ErrorMsg });
+    this.setState({ row, ErrorMsg, Validations });
   }
 
 
   handleOnTaskChange = (description) => {
     let row = {...this.state.row};
-    row.Description = description;
+    row.description = description;
     this.setState({ row});
   }
 
   handleDate = (date, type) => {
+    const formattedDate = dayjs(date).format('YYYY-MM-DD');
     let row = { ...this.state.row };
-    row[type] = date;
+    row[type] = formattedDate;
     this.setState({ row });
   }
 
   render() {
-    const { row, ErrorMsg } = this.state;
-debugger;
+    const { row, ErrorMsg, Validations } = this.state;
     return (
       <React.Fragment>
         
@@ -179,33 +218,39 @@ debugger;
               {row.open ? <Tooltip title="Close"><KeyboardArrowUpIcon /></Tooltip> : <Tooltip title="Expand"><KeyboardArrowDownIcon /></Tooltip>}
             </IconButton>
           </TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Project_Name}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.projectName}</div></TableCell>
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>
-          <Chip
-              label={row.StartDate ?
-                <Moment format={"DD-MMM-YYYY"}>
-                  {row.StartDate}
-                </Moment>
-                : ''}
-              variant="filled" />
+          {row.startDate && (
+              <Chip
+                label={row.startDate ? (
+                  <Moment format={"YYYY-MM-DD"}>
+                    {row.startDate}
+                  </Moment>
+                ) : ''}
+                variant="filled"
+              />
+            )}
               </div>
           </TableCell>
           <TableCell  className={this.props.classes.tableCell}> <div className={this.props.classes.iconWrapper}>
-          <Chip
-              label={row.EndDate ?
-                <Moment format={"DD-MMM-YYYY"}>
-                  {row.EndDate}
+          {row.endDate && (
+            <Chip
+              label={row.endDate ? (
+                <Moment format={"YYYY-MM-DD"}>
+                  {row.endDate}
                 </Moment>
-                : ''}
-              variant="filled" />
+              ) : ''}
+              variant="filled"
+            />
+          )}
               </div>
             </TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.Description}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.description}</div></TableCell>
           <TableCell align="right">
           <Tooltip title="Delete">
             <span>
         <IconButton aria-label="fingerprint" color="secondary">
-          <Fingerprint onClick={() => this.props.DeleteProjects(row.Id) } />
+          <Fingerprint onClick={() => this.props.DeleteProject(row.id) } />
         </IconButton>
         </span>
         </Tooltip>
@@ -217,7 +262,7 @@ debugger;
       </IconButton>
       </span>
       </Tooltip>
-
+      <Loading loading={this.state.loading} {...this.props}/>
           </TableCell>
         </TableRow>
         <TableRow>
@@ -227,29 +272,32 @@ debugger;
        <div className="row" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
             <div className="col-md-2 pull-left">
             <TextField
-            error={!this.state.row.Validations.IsProject_Name}
+            error={!Validations.IsProjectName}
             required
             id="component-error"
             variant="standard"
             label="Project Name"
             sx={{ width: 250 }}
-            value={row.Project_Name}
-            // helperText={ErrorMsg.Project_Name}
-            onChange={(e) => this.handleFieldChange("Project_Name", e)}
+            value={row.projectName}
+            // helperText={ErrorMsg.projectName}
+            onChange={(e) => this.handleFieldChange("projectName", e)}
             inputProps={{ maxLength: 50 }}
           />
                 </div>
                 <div className="col-md-2 pull-left">
             <DatePicker
-            label = {"StartDate"}
+            label = {"startDate"}
             handleDate = {this.handleDate}
+            date = {row.startDate}
             {...this.props}
             />
             </div>
             <div className="col-md-2 pull-left">
             <DatePicker
-            label = {"EndDate"}
+            label = {"endDate"}
             handleDate = {this.handleDate}
+            date = {row.endDate}
+            minDate={row.startDate ? dayjs(row.startDate) : null}
             {...this.props}
             />
                 </div>
@@ -259,12 +307,12 @@ debugger;
                 <MinHeightTextarea 
         //  error={!this.state.row.Validations.IsTasks}
          required
-         text={"Please Enter Description"}
+         text={"Please Enter Description & Skills"}
           id="component-error"
           variant="standard"
           label="Description"
           // sx={{ width: '100%' }}
-          value={row.Tasks}
+          value={row.description}
           onSummaryChange={this.handleOnTaskChange}
           // helperText={ErrorMsg.Tasks}
         />
@@ -287,71 +335,78 @@ class Projects extends React.Component {
     super(props);
     this.state = {
       rows : [],
-      activeStep : 6
+      activeStep : 7
     } 
   }
 
-  backSummary = () => {
-    this.stepperRef.current.handleBack();
-  }
-
-  submitProjectsParent = (row) => {
-    let rows = [...this.state.rows];
-    rows[0].Id = row.Id;
-        this.setState({rows});
-        
-  }
-
-  DeleteProjects = (id) => {
-    this.setState((prevState) => ({
-      rows: prevState.rows.filter(row => row.Id !== id) // Filter out the row with the matching id
-    }));
+  updateTableData = updatedRow => {
+  
+    // Copy the current state rows to data
+    let data = [...this.state.rows];
+  
+    // Map through the rows and update the row with id === 0 or matching id with updatedRow
+    const updatedData = data.map(row => 
+      row.id === 0 || row.id === updatedRow.id ? updatedRow : row
+    );
+  
+    // Update the state with the modified rows
+    this.setState({
+      rows: updatedData
+    });
   };
 
-  // submitExperience = (row) => {
-  //   debugger;
-  //   if(row.company && row.Designation && row.Location && row.Experience && row.skill && row.task)
-  //   {
+  componentDidMount(){
+    this.setState({ loading: true });
+    axios.get(`http://localhost:5153/projects/getProject/1`)
+    .then(response => {
+      this.setState({ rows: response.data});
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+    .finally(() => {
+      this.setState({ loading: false });
+    });
+  }
 
-  //   }
-  //   else{
-  //     if (row.company === "" || row.company === null) {
-  //       console.log("hi");
-  //       // row.Validations.IsValidAddress_Line_1 = false;
-  //       // ErrorMsg.Address = "Address cannot be empty"
-  //     }
-  //     if(row.Designation === "" || row.Designation === null){
-  //       row.Validations.IsDesignation = false;
 
-  //     }
-  //   }
-
-  //   this.stepperRef.current.handleNext();
-  //  if (this.props.enqueueSnackbar) {
-  //     this.props.enqueueSnackbar('This is a shared notification message!', {
-  //       variant: 'success',
-  //     }); }
-  //   // axios.put(`https://api.example.com/data/`, this.state.summary)
-  //   // .then(response => {
-
-  //   //   this.setState({ data: response.data, loading: false });
-  //   //   console.log('Data updated successfully:', response.data);
-  //   // })
-  //   // .catch(error => {
-  //   //   // // Handle error
-  //   //   // this.setState({ error: error.message, loading: false });
-  //   //   // console.error('Error updating data:', error);
-  //   // });
-  // }
+  DeleteProject = (id) => {
+    this.setState({ loading: true });
+    axios.delete(`http://localhost:5153/projects/deleteProject/${id}`)
+    .then(response => {
+      if (this.props.enqueueSnackbar) {
+        this.props.enqueueSnackbar('Project deleted successfully', {
+          variant: 'success',
+        }); }
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+    .finally(() => {
+      this.setState({ loading: false });
+    });
+    this.setState((prevState) => {
+      const updatedRows = prevState.rows.filter(row => row.id !== id);
+      return { rows: updatedRows };
+  }, () => {
+      this.forceUpdate(); // Force update (not recommended for regular use)
+  });
+  };
 
   addNewRow = event => {
       let row = {
         open: true,
-        Id : 0,
-        Project_Name: "",
-        StartDate: "",
-        EndDate: "",
-        Description : ""
+        id : 0,
+        projectName: "",
+        startDate: "",
+        endDate: "",
+        description : ""
       }
       this.state.rows.unshift(row)
       this.setState({
@@ -376,16 +431,22 @@ class Projects extends React.Component {
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="StartDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="EndDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Description"><DescriptionIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}> 
-            <Button variant="contained" onClick={(e) => this.addNewRow(e)} className={this.props.classes.containedbutton}>add projects</Button>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}> <div className={this.props.classes.iconWrapper}>
+            <Button variant="contained" 
+            onClick={(e) => this.addNewRow(e)} 
+            className={this.props.classes.containedbutton}
+            disabled = {(rows[0]?.id === 0)}
+            >add projects</Button>
+            </div>
           </TableCell>
             </TableRow>
+            <Loading loading={this.state.loading} {...this.props}/>
           </TableHead>
           <TableBody>
             {rows.map((row) => (
-              <Row key={row.name} row={row} 
-              submitProjectsParent = {this.submitProjectsParent}
-              DeleteProjects = {this.DeleteProjects}
+              <Row key={row.id} row={row} 
+              DeleteProject = {this.DeleteProject}
+              updateTableData = {this.updateTableData}
               rows = {rows}
               {...this.props}
               />
