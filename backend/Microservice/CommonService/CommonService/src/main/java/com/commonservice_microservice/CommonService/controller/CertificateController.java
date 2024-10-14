@@ -36,7 +36,7 @@ public class CertificateController {
                 certificateService.addCertificate(userId, id, fileType, fileName, file);
 
 
-                return ResponseEntity.status(HttpStatus.OK).body(0);
+                return ResponseEntity.status(HttpStatus.OK).body(0); // file added successfully
             }
         }catch (Exception e) {
             // Handle any other exceptions that may occur
@@ -74,12 +74,18 @@ public class CertificateController {
     }
 
     @GetMapping("/getCertificates/files/{fileId}")
-    public ResponseEntity<byte[]> viewFile(@PathVariable int fileId) {
+    public ResponseEntity<?> viewFile(@PathVariable int fileId) {
+        try {
         Certificate certificate = certificateService.getFileById(fileId);  // Fetch the file from DB
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(certificate.getFileType()))  // Set correct content type
                 .body(certificate.getFile());  // Return file as byte[]
+        } catch (Exception e) {
+            // Handle any other exceptions that may occur
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/deleteCertificate/{id}")

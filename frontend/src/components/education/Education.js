@@ -33,6 +33,9 @@ import StarIcon from '@mui/icons-material/Star';
 import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 import DatePicker from '../../shared/datePicker';
 import Moment from "react-moment";
+import Loading from "../../shared/loading";
+import dayjs from 'dayjs';
+
 
 class Row extends React.Component {
   constructor(props) {
@@ -48,16 +51,16 @@ class Row extends React.Component {
         startDate: props.row.startDate,
         endDate : props.row.endDate,
         cgpa: props.row.cgpa,
-        specalization: props.row.specalization,
-        Validations: {
-          "Iscollege": true,
-          "Iscourse": true,
-          "Isprogram": true,
-          "IsstartDate": true,
-          "IsendDate": true,
-          "Iscgpa": true,
-          "Isspecalization": true
-        }
+        specialization: props.row.specialization,
+      },
+      Validations: {
+        "Iscollege": true,
+        "Iscourse": true,
+        "Isprogram": true,
+        "IsstartDate": true,
+        "IsendDate": true,
+        "Iscgpa": true,
+        "Isspecialization": true
       },
       ErrorMsg: {
         college: "",
@@ -66,7 +69,7 @@ class Row extends React.Component {
         startDate: "",
         endDate: "",
         cgpa: "",
-        specalization: ""
+        specialization: "",
       }
     };
     
@@ -82,71 +85,96 @@ class Row extends React.Component {
   handleFieldChange = (fieldName, event) => {
     let row = { ...this.state.row };
     let ErrorMsg = { ...this.state.ErrorMsg };
+    let Validations = {...this.state.Validations};
     row[fieldName] = event.target.value.trimStart();
   
     if (event.target.value) {
-      row.Validations[`Is${fieldName}`] = true;
+      Validations[`Is${fieldName}`] = true;
       ErrorMsg[fieldName] = "";
     } else {
-      row.Validations[`Is${fieldName}`] = false;
+      Validations[`Is${fieldName}`] = false;
       ErrorMsg[fieldName] = `${fieldName} cannot be empty`;
     }
   
-    this.setState({ row, ErrorMsg });
+    this.setState({ row, ErrorMsg, Validations });
   }
 
   handleDate = (date, type) => {
+    const formattedDate = dayjs(date).format('YYYY-MM-DD');
     let row = { ...this.state.row };
-    row[type] = date;
+    row[type] = formattedDate;
     this.setState({ row });
+  }
+
+  formatDateToYYYYMMDD = (date) => {
+    if (!date) {
+      return null; // If date is empty, return null
+    }
+  
+    const parsedDate = new Date(date);
+  
+    // Check if the date is valid
+    if (isNaN(parsedDate.getTime())) {
+      console.error("Invalid date:", date);
+      return null; // Return null for invalid date
+    }
+  
+    const year = parsedDate.getFullYear();
+    const month = ('0' + (parsedDate.getMonth() + 1)).slice(-2); // Add leading 0 if needed
+    const day = ('0' + parsedDate.getDate()).slice(-2); // Add leading 0 if needed
+  
+    return `${year}-${month}-${day}`; // Format as YYYY-MM-DD
   }
   
   submitEducation = () => {
     let row = {...this.state.row};
     let ErrorMsg = {...this.state.ErrorMsg};
+    let Validations = {...this.state.Validations};
     debugger;
-    if(row.college && row.course && row.program && row.startDate && row.endDate && row.cgpa && row.specalization)
+    if(row.college && row.course && row.program && row.startDate && row.endDate && row.cgpa && row.specialization)
     { const payload = {
       "userId": 1, 
       "id" : row.id,
       "college": row.college,
       "course": row.course,
       "program" : row.program,
-      "startDate" : row.startDate,
-      "endDate" : row.endDate,
+      "startDate": row.startDate ? this.formatDateToYYYYMMDD(row.startDate) : null, // Format date to DD-MM-YYYY
+      "endDate" : row.endDate ? this.formatDateToYYYYMMDD(row.endDate) : null,
       "cgpa" : row.cgpa,
-      "specalization" : row.specalization
+      "specialization" : row.specialization
     };
     this.setState({ loading: true })
-    axios.post(`http://localhost:5151/experience/addExperience`, payload)
+    axios.post(`http://localhost:5152/education/addEducation`, payload)
     .then(data => {
       if(row.id === 0){
         row.open = false;
         row.id = data.data.id;
-        row.company = data.data.company;
-        row.designation = data.data.designation;
-        row.location = data.data.location;
-        row.experience = data.data.experience;
-        row.skills = data.data.skills;
-        row.tasks = data.data.tasks;
+        row.college = data.data.college;
+        row.course = data.data.course;
+        row.program = data.data.program;
+        row.startDate = data.data.startDate;
+        row.endDate = data.data.endDate;
+        row.cgpa = data.data.cgpa;
+        row.specialization = data.data.specialization;
         this.setState({row});
         if (this.props.enqueueSnackbar) {
-          this.props.enqueueSnackbar('experience added successfully', {
+          this.props.enqueueSnackbar('education added successfully', {
             variant: 'success',
           }); }
         this.props.updateTableData(row);
          } else if(row.id === data.data.id){
           row.open = false;
           row.id = data.data.id;
-          row.company = data.data.company;
-          row.designation = data.data.designation;
-          row.location = data.data.location;
-          row.experience = data.data.experience;
-          row.skills = data.data.skills;
-          row.tasks = data.data.tasks;
+          row.college = data.data.college;
+          row.course = data.data.course;
+          row.program = data.data.program;
+          row.startDate = data.data.startDate;
+          row.endDate = data.data.endDate;
+          row.cgpa = data.data.cgpa;
+          row.specialization = data.data.specialization;
           this.setState({row});
           if (this.props.enqueueSnackbar) {
-            this.props.enqueueSnackbar('experience updated successfully', {
+            this.props.enqueueSnackbar('education updated successfully', {
               variant: 'success',
             }); }
           this.props.updateTableData(row);
@@ -162,52 +190,44 @@ class Row extends React.Component {
     .finally(() => {
       this.setState({ loading: false });
     });
-      row.Id = 1;
-      if (this.props.enqueueSnackbar) {
-        this.props.enqueueSnackbar('Education added successfully', {
-          variant: 'success',
-          row
-        }); }
-      this.props.submitEducationParent(row);
-      row.open = false; // Set open to false to collapse the row
-      this.setState({ row }); // Update the state to reflect the change
+      // this.props.submitEducationParent(row);
     }
     else{
       if (row.college === "" || row.college === null) {
-        row.Validations.Iscollege = false;
+        Validations.Iscollege = false;
         ErrorMsg.college = "college cannot be empty";
       }
       if(row.course === "" || row.course === null){
-        row.Validations.Iscourse = false;
+        Validations.Iscourse = false;
         ErrorMsg.course = "course cannot be empty";
       }
       if(row.program === "" || row.program === null){
-        row.Validations.Isprogram = false;
+        Validations.Isprogram = false;
         ErrorMsg.program = "program cannot be empty";
       }
       if(row.startDate === "" || row.startDate === null){
-        row.Validations.IsstartDate = false;
+        Validations.IsstartDate = false;
         ErrorMsg.startDate = "startDate cannot be empty";
       }
       if(row.endDate === "" || row.endDate === null){
-        row.Validations.IsendDate = false;
+        Validations.IsendDate = false;
         ErrorMsg.endDate = "endDate cannot be empty";
       }
       if(row.cgpa === "" || row.cgpa === null){
-        row.Validations.Iscgpa = false;
+        Validations.Iscgpa = false;
         ErrorMsg.cgpa = "cgpa cannot be empty";
       }
-      if(row.specalization === "" || row.specalization === null){
-        row.Validations.Isspecalization = false;
-        ErrorMsg.specalization = "specalization cannot be empty";
+      if(row.specialization === "" || row.specialization === null){
+        Validations.Isspecialization = false;
+        ErrorMsg.specialization = "specialization cannot be empty";
       }
-      this.setState({ row });
+      this.setState({ row, Validations });
     }
     this.setState({ ErrorMsg });
   }
 
   render() {
-    const { row, ErrorMsg } = this.state;
+    const { row, ErrorMsg, Validations } = this.state;
     return (
       <React.Fragment>
         
@@ -224,32 +244,38 @@ class Row extends React.Component {
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.course}</div></TableCell>
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.program}</div></TableCell>
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> 
-          <Chip
-              label={row.startDate ?
-                <Moment format={"DD-MMM-YYYY"}>
-                  {row.startDate}
-                </Moment>
-                : ''}
-              variant="filled" />
+          {row.startDate && (
+              <Chip
+                label={row.startDate ? (
+                  <Moment format={"YYYY-MM-DD"}>
+                    {row.startDate}
+                  </Moment>
+                ) : ''}
+                variant="filled"
+              />
+            )}
               </div>
           </TableCell>  
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> 
-          <Chip
-              label={row.endDate ?
-                <Moment format={"DD-MMM-YYYY"}>
-                  {row.endDate}
-                </Moment>
-                : ''}
-              variant="filled" />
+          {row.endDate && (
+              <Chip
+                label={row.endDate ? (
+                  <Moment format={"YYYY-MM-DD"}>
+                    {row.endDate}
+                  </Moment>
+                ) : ''}
+                variant="filled"
+              />
+            )}
               </div>
           </TableCell>
           <TableCell className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.cgpa}</div></TableCell>
-          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.specalization}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.specialization}</div></TableCell>
           <TableCell align="right" className={this.props.classes.tableCell}>
           <Tooltip title="Delete">
             <span>
         <IconButton aria-label="fingerprint" color="secondary">
-          <Fingerprint onClick={() => this.props.DeleteEducation(row.Id)} />
+          <Fingerprint onClick={() => this.props.DeleteEducation(row.id)} />
         </IconButton>
         </span>
         </Tooltip>
@@ -261,6 +287,7 @@ class Row extends React.Component {
       </IconButton>
       </span>
       </Tooltip>
+      <Loading loading={this.state.loading} {...this.props}/>
 
           </TableCell>
         </TableRow>
@@ -271,7 +298,7 @@ class Row extends React.Component {
        <div className="row" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
             <div className="col-md-2 pull-left">
           <TextField
-            error={!this.state.row.Validations.Iscollege}
+            error={!Validations.Iscollege}
             required
             id="component-error"
             variant="standard"
@@ -285,7 +312,7 @@ class Row extends React.Component {
           </div>
         <div className="col-md-2 pull-left">
           <TextField
-            error={!this.state.row.Validations.Iscourse}
+            error={!Validations.Iscourse}
             required
             id="component-error"
             variant="standard"
@@ -299,7 +326,7 @@ class Row extends React.Component {
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.Isprogram}
+           error={!Validations.Isprogram}
            required
             id="component-error"
             variant="standard"
@@ -316,6 +343,7 @@ class Row extends React.Component {
         <DatePicker
         label = {"startDate"}
         handleDate = {this.handleDate}
+        date = {row.startDate}
         {...this.props}
       />
         </div>
@@ -323,12 +351,14 @@ class Row extends React.Component {
         <DatePicker
         label = {"endDate"}
         handleDate = {this.handleDate}
+        date = {row.endDate}
+        minDate={row.startDate ? dayjs(row.startDate) : null}
         {...this.props}
       />
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.Iscgpa}
+           error={!Validations.Iscgpa}
            required
             id="component-error"
             variant="standard"
@@ -352,15 +382,15 @@ class Row extends React.Component {
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!this.state.row.Validations.Isspecalization}
+           error={!Validations.Isspecialization}
            required
             id="component-error"
             variant="standard"
-            label="specalization"
+            label="specialization"
             sx={{ width: 250 }}
-            value={row.specalization}
-            // helperText={ErrorMsg.specalization}
-            onChange={(e) => this.handleFieldChange("specalization", e)}
+            value={row.specialization}
+            // helperText={ErrorMsg.specialization}
+            onChange={(e) => this.handleFieldChange("specialization", e)}
             inputProps={{ maxLength: 15 }}
           />
         </div>
@@ -386,73 +416,78 @@ class Education extends React.Component {
         activeStep : 3
       } 
     }
-  
-    backSummary = () => {
-      this.stepperRef.current.handleBack();
+
+
+    componentDidMount(){
+      this.setState({ loading: true });
+      axios.get(`http://localhost:5152/education/getEducation/1`)
+      .then(response => {
+        this.setState({ rows: response.data});
+      })
+      .catch(error => {
+        const errorMessage = error.response?.data || 'An error occurred';
+        this.props.enqueueSnackbar(errorMessage, {
+          variant: 'error',
+        });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
     }
 
-    submitEducation = () => {
-      this.props.navigate('/skills');
-    }
+    updateTableData = updatedRow => {
   
-    submitEducationParent = (row) => {
-      let rows = [...this.state.rows];
-      rows[0].Id = row.Id;
-          this.setState({rows});
-    }
+      // Copy the current state rows to data
+      let data = [...this.state.rows];
+    
+      // Map through the rows and update the row with id === 0 or matching id with updatedRow
+      const updatedData = data.map(row => 
+        row.id === 0 || row.id === updatedRow.id ? updatedRow : row
+      );
+    
+      // Update the state with the modified rows
+      this.setState({
+        rows: updatedData
+      });
+    };
   
     DeleteEducation = (id) => {
-      this.setState((prevState) => ({
-        rows: prevState.rows.filter(row => row.Id !== id) // Filter out the row with the matching id
-      }));
+      this.setState({ loading: true });
+      axios.delete(`http://localhost:5152/education/deleteEducation/${id}`)
+      .then(response => {
+        if (this.props.enqueueSnackbar) {
+          this.props.enqueueSnackbar('Education deleted successfully', {
+            variant: 'success',
+          }); }
+      })
+      .catch(error => {
+        const errorMessage = error.response?.data || 'An error occurred';
+        this.props.enqueueSnackbar(errorMessage, {
+          variant: 'error',
+        });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
+      this.setState((prevState) => {
+        const updatedRows = prevState.rows.filter(row => row.id !== id);
+        return { rows: updatedRows };
+    }, () => {
+        this.forceUpdate(); // Force update (not recommended for regular use)
+    });
     };
-    // submitExperience = (row) => {
-    //   debugger;
-    //   if(row.company && row.Designation && row.Location && row.Experience && row.skill && row.task)
-    //   {
-  
-    //   }
-    //   else{
-    //     if (row.company === "" || row.company === null) {
-    //       console.log("hi");
-    //       // row.Validations.IsValidAddress_Line_1 = false;
-    //       // ErrorMsg.Address = "Address cannot be empty"
-    //     }
-    //     if(row.Designation === "" || row.Designation === null){
-    //       row.Validations.IsDesignation = false;
-  
-    //     }
-    //   }
-  
-    //   this.stepperRef.current.handleNext();
-    //  if (this.props.enqueueSnackbar) {
-    //     this.props.enqueueSnackbar('This is a shared notification message!', {
-    //       variant: 'success',
-    //     }); }
-    //   // axios.put(`https://api.example.com/data/`, this.state.summary)
-    //   // .then(response => {
-  
-    //   //   this.setState({ data: response.data, loading: false });
-    //   //   console.log('Data updated successfully:', response.data);
-    //   // })
-    //   // .catch(error => {
-    //   //   // // Handle error
-    //   //   // this.setState({ error: error.message, loading: false });
-    //   //   // console.error('Error updating data:', error);
-    //   // });
-    // }
   
     addNewRow = event => {
         let row = {
           open: true,
-          Id : 0,
+          id : 0,
           college: "",
           course: "",
           program: "",
           startDate: "",
           endDate: "",
           cgpa: "",
-          specalization: ""
+          specialization: ""
         }
         this.state.rows.unshift(row)
         this.setState({
@@ -460,7 +495,10 @@ class Education extends React.Component {
         });
       }
   
-  
+    submitEducation = () => {
+      this.props.navigate('/skills');
+      }
+
     render() {
      const {rows } = this.state;
       return (  
@@ -479,30 +517,32 @@ class Education extends React.Component {
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="startDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="endDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="cgpa"><StarIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
-              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="specalization"><FolderSpecialIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="specialization"><FolderSpecialIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               {/* <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Tasks"></Tooltip></TableCell> */}
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}> 
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <Button variant="contained"
                onClick={(e) => this.addNewRow(e)} 
               className={this.props.classes.containedbutton}
-              disabled = {(rows[0]?.Id === 0)}
+              disabled = {(rows[0]?.id === 0)}
               >
                 add education</Button>
     <Tooltip title={"Next"}>
-    <IconButton aria-label="fingerprint" color="success"  disabled={!rows.length || rows[0]?.Id === 0}>
+    <IconButton aria-label="fingerprint" color="success"  disabled={!rows.length || rows[0]?.id === 0}>
         <Fingerprint onClick={ this.submitEducation} 
         />
       </IconButton>
       </Tooltip>
   </div>
+  <Loading loading={this.state.loading} {...this.props}/>
+
           </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row) => (
-              <Row key={row.name} row={row} 
-              submitEducationParent = {this.submitEducationParent}
+              <Row key={row.id} row={row} 
+              updateTableData = {this.updateTableData}
               DeleteEducation = {this.DeleteEducation}
               rows = {rows}
               {...this.props}

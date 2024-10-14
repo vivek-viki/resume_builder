@@ -1,11 +1,7 @@
 package com.commonservice_microservice.CommonService.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
 @Entity
 @Table(name = "t_certificates")

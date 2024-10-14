@@ -33,6 +33,10 @@ import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Loading from "../../shared/loading";
 import InputAdornment from '@mui/material/InputAdornment';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import Moment from "react-moment";
+import DatePicker from "../../shared/datePicker";
+import dayjs from 'dayjs';
 
 
 class Row extends React.Component {
@@ -46,6 +50,8 @@ class Row extends React.Component {
         company: props.row.company,
         designation: props.row.designation,
         location: props.row.location,
+        startDate : props.row.startDate,
+        endDate : props.row.endDate,
         experience: props.row.experience,
         skills: props.row.skills,
         tasks: props.row.tasks,
@@ -55,6 +61,8 @@ class Row extends React.Component {
         "Isdesignation": true,
         "Islocation": true,
         "Isexperience": true,
+        "IsStartDate" : true,
+        "IsEndDate"  :true,
         "Isskills": true,
         "Istasks": true
       },
@@ -63,6 +71,8 @@ class Row extends React.Component {
         designation: "",
         location: "",
         experience: "",
+        startDate : "",
+        endDate : "",
         skills: "",
         tasks: ""
       },
@@ -158,6 +168,35 @@ class Row extends React.Component {
   };
   
 
+  handleDate = (date, type) => {
+    const formattedDate = dayjs(date).format('YYYY-MM-DD');
+    let row = { ...this.state.row };
+    row[type] = formattedDate;
+    this.setState({ row });
+  }
+
+
+  formatDateToYYYYMMDD = (date) => {
+    if (!date) {
+      return null; // If date is empty, return null
+    }
+  
+    const parsedDate = new Date(date);
+  
+    // Check if the date is valid
+    if (isNaN(parsedDate.getTime())) {
+      console.error("Invalid date:", date);
+      return null; // Return null for invalid date
+    }
+  
+    const year = parsedDate.getFullYear();
+    const month = ('0' + (parsedDate.getMonth() + 1)).slice(-2); // Add leading 0 if needed
+    const day = ('0' + parsedDate.getDate()).slice(-2); // Add leading 0 if needed
+  
+    return `${year}-${month}-${day}`; // Format as YYYY-MM-DD
+  }
+
+
   submitexperience = () => {
     let row = {...this.state.row};
     let Validations = { ...this.state.Validations };
@@ -171,6 +210,8 @@ class Row extends React.Component {
         "designation": row.location,
         "location" : row.location,
         "experience" : row.experience,
+        "startDate": row.startDate ? this.formatDateToYYYYMMDD(row.startDate) : null, // Format date to DD-MM-YYYY
+        "endDate" : row.endDate ? this.formatDateToYYYYMMDD(row.endDate) : null,  
         "skills" : row.skills,
         "tasks" : row.tasks
       };
@@ -184,6 +225,8 @@ class Row extends React.Component {
           row.designation = data.data.designation;
           row.location = data.data.location;
           row.experience = data.data.experience;
+          row.startDate = data.data.startDate;
+          row.endDate = data.data.endDate;
           row.skills = data.data.skills;
           row.tasks = data.data.tasks;
           this.setState({row});
@@ -199,6 +242,8 @@ class Row extends React.Component {
             row.designation = data.data.designation;
             row.location = data.data.location;
             row.experience = data.data.experience;
+            row.startDate = data.data.startDate;
+            row.endDate = data.data.endDate;
             row.skills = data.data.skills;
             row.tasks = data.data.tasks;
             this.setState({row});
@@ -263,6 +308,14 @@ class Row extends React.Component {
     this.setState({ New_Skills : event.target.value, Validations: validations, ErrorMsg });
   }
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.skillsList !== this.props.skillsList) {
+      this.setState({
+        skillData: this.props.skillsList,
+      });
+    }
+  }
+
   render() {
     const { row, Validations } = this.state;
     return (
@@ -281,6 +334,32 @@ class Row extends React.Component {
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.designation}</div></TableCell>
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.location}</div></TableCell>
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.experience}</div></TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>
+          {row.startDate && (
+              <Chip
+                label={row.startDate ? (
+                  <Moment format={"YYYY-MM-DD"}>
+                    {row.startDate}
+                  </Moment>
+                ) : ''}
+                variant="filled"
+              />
+            )}
+              </div>
+          </TableCell>
+          <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>
+          {row.endDate && (
+              <Chip
+                label={row.endDate ? (
+                  <Moment format={"YYYY-MM-DD"}>
+                    {row.endDate}
+                  </Moment>
+                ) : ''}
+                variant="filled"
+              />
+            )}
+            </div>
+          </TableCell>
           <TableCell className={this.props.classes.tableCell}> 
           <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {row.skills.map((skill, index) => (
@@ -312,7 +391,7 @@ class Row extends React.Component {
           </TableCell>
         </TableRow>
         <TableRow>
-        <TableCell colSpan={8}  className={this.props.classes.tableForm}>
+        <TableCell colSpan={10}  className={this.props.classes.tableForm}>
   <Collapse in={row.open} timeout="auto" unmountOnExit>
     <Box component="form" sx={{ margin: 1 }}>
        <div className="row" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
@@ -368,10 +447,34 @@ class Row extends React.Component {
             sx={{ width: 250 }}
             value={row.experience}
             // helperText={ErrorMsg.experience}
-            onChange={(e) => this.handleFieldChange("experience", e)}
-            inputProps={{ maxLength: 15 }}
+            onChange={(e) => {
+              const { value } = e.target;
+              // Allow input only if it's a number or empty (to allow deletion)
+              if (/^\d*$/.test(value)) {
+                this.handleFieldChange("experience", e);  // Update only if valid
+              }
+            }}
+            // onChange={(e) => this.handleFieldChange("experience", e)}
+            inputProps={{ maxLength: 10 }}
           />
         </div>
+        <div className="col-md-2 pull-left">
+            <DatePicker
+            label = {"startDate"}
+            handleDate = {this.handleDate}
+            date = {row.startDate}
+            {...this.props}
+            />
+            </div>
+            <div className="col-md-2 pull-left">
+            <DatePicker
+            label = {"endDate"}
+            handleDate = {this.handleDate}
+            date = {row.endDate}
+            minDate={row.startDate ? dayjs(row.startDate) : null}
+            {...this.props}
+            />
+                </div>
         {/* <Box> */}
         <div className="col-md-2 pull-left">
         <Stack direction="row" spacing={1}>
@@ -524,6 +627,8 @@ class Experience extends React.Component {
         designation: "",
         location: "",
         experience: "",
+        startDate : "",
+        endDate : "",
         skills: [],
         tasks: ""
       }
@@ -568,6 +673,7 @@ class Experience extends React.Component {
 
   render() {
    const {rows, skillsList} = this.state;
+   debugger;
     return (  
       <Card >
       {/* <CardActionArea > */}
@@ -582,6 +688,8 @@ class Experience extends React.Component {
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Designation"><ContactEmergencyIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Location"><GpsFixedIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Experience"><WorkHistoryIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="StartDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="EndDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Skills"><AddRoadIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Tasks"><TaskAltIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}> 

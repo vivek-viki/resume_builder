@@ -26,25 +26,32 @@ import InputFileUpload from '../../shared/uploaddoc';
 import Loading from "../../shared/loading";
 
 const getMimeType = (fileExtension) => {
+  // Check if fileExtension is defined
+  if (!fileExtension) {
+      console.error('File extension is undefined or null');
+      return 'application/octet-stream'; // Default MIME type for unknown types
+  }
+
   switch (fileExtension.toLowerCase()) {
-    case 'pdf':
-      return 'application/pdf';
-    case 'jpg':
-    case 'jpeg':
-      return 'image/jpeg';
-    case 'png':
-      return 'image/png';
-    case 'doc':
-      return 'application/msword';
-    case 'docx':
-      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    case 'xlsx':
-      return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-    // Add more mappings as needed for other file types
-    default:
-      return '';  // Handle unsupported types (optional)
+      case 'pdf':
+          return 'application/pdf';
+      case 'doc':
+          return 'application/msword';
+      case 'docx':
+          return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      case 'jpg':
+      case 'jpeg':
+          return 'image/jpeg';
+      case 'png':
+          return 'image/png';
+      case 'gif':
+          return 'image/gif';
+      // Add more file types as needed
+      default:
+          return 'application/octet-stream'; // Default MIME type for unknown types
   }
 };
+
 
 function createData(name, calories, fat, carbs, protein, price) {
   return {
@@ -78,8 +85,6 @@ class Row extends React.Component {
       loading: false,
       selection : this.props.selection || [],
       id: 0,
-      fileURL: null,
-      fileType: '',
     };
   }
 
@@ -98,7 +103,6 @@ class Row extends React.Component {
   };
 
   handleCertificateDelete = (id,fileNameToDelete) => {
-    debugger;
     if(id){
       this.setState({ loading: true });
       axios.delete(`http://localhost:5153/certificates/deleteCertificate/${id}`)
@@ -151,40 +155,10 @@ class Row extends React.Component {
     }
   };
 
-  onSelectSkill = (event) => {
-    const selectedSkill = event.target.innerText;
-
-    this.setState((prevState) => {
-      // Avoid duplicates
-      const updatedSkills = prevState.Skills.includes(selectedSkill)
-        ? prevState.Skills
-        : [...prevState.Skills, selectedSkill];
-      
-      return { Skills: updatedSkills }; // Update Skills directly
-    });
-  };
-
   handleFieldChange = (fieldName, event) => {
     this.setState({ New_Skills : event.target.value });
   }
 
-  submitSkills = () => {
-
-    this.setState((prevState) => {
-      // Avoid duplicates
-      const updatedSkills = prevState.Skills.includes(this.state.New_Skills)
-        ? prevState.Skills
-        : [...prevState.Skills, this.state.New_Skills];
-      
-      return { Skills: updatedSkills, New_Skills : "" }; // Update Skills directly
-    });
-  }
-
-  componentWillUnmount() {
-    if (this.state.fileURL) {
-      URL.revokeObjectURL(this.state.fileURL);
-    }
-  }
 
   handleViewFile = (certificate) => {
     const byteCharacters = atob(certificate.fileContent);  // Decode Base64 content
@@ -247,15 +221,20 @@ class Row extends React.Component {
   
 
   submitCertificates = () => {
-    let selection = {...this.state.selection};
-    if(selection){
+    debugger;
+    // let selection = {...this.state.selection};
+    let selection = Array.isArray(this.state.selection) ? this.state.selection : [];  // Convert to array if not already
+    if(Array.isArray(selection) && selection){
       this.setState({ loading: true });
       const formData = new FormData();
       formData.append('userId', 1);
       formData.append('id', this.state.id);
-      formData.append('fileType', getMimeType(selection[0].fileExtension));
-      formData.append('fileName', selection[0].fileName);
-      formData.append('file', selection[0].file);
+  
+      // Iterate through each file in the selection
+      selection.forEach((fileData) => {
+        formData.append('file', fileData.file); // Use the same key for multiple files
+        formData.append('fileType', getMimeType(fileData.fileExtension));
+        formData.append('fileName', fileData.fileName);
       axios.post(`http://localhost:5153/certificates/addCertificates`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -283,24 +262,52 @@ class Row extends React.Component {
           variant: 'error',
         });
       });
-  }
+    });}
 }
 
 handleFieldChange = (files) => {
   // Use the previous state to avoid replacing existing selection
   this.setState((prevState) => {
-      const updatedFiles = files.map((file) => ({
-          file: file.file,                  // Store the actual file object
-          fileName: file.fileName,          // Store the file name
-          fileExtension: file.fileExtension  // Store the file extension
-      }));
+    const updatedFiles = files.map((file) => ({
+      file: file.file,                  // Store the actual file object
+      fileName: file.fileName,          // Store the file name
+      fileExtension: file.fileExtension  // Store the file extension
+    }));
 
-      // Combine the previous selection with the new updated files
-      const selection = [...prevState.selection, ...updatedFiles];
+    // Combine previous selection with new updated files, filtering out duplicates
+    const combinedSelection = [...prevState.selection];
 
-      return { selection }; // Update the state with the combined selection
+    updatedFiles.forEach((newFile) => {
+      const isDuplicate = combinedSelection.some(existingFile =>
+        existingFile.fileName === newFile.fileName && existingFile.file.fileName === newFile.file.fileName
+      );
+
+      // Only add new files if they're not duplicates
+      if (!isDuplicate) {
+        combinedSelection.push(newFile);
+      }
+    });
+
+    return { selection: combinedSelection }; // Update the state with the combined selection
   });
 };
+
+
+// handleFieldChange = (files) => {
+//   // Use the previous state to avoid replacing existing selection
+//   this.setState((prevState) => {
+//       const updatedFiles = files.map((file) => ({
+//           file: file.file,                  // Store the actual file object
+//           fileName: file.fileName,          // Store the file name
+//           fileExtension: file.fileExtension  // Store the file extension
+//       }));
+
+//       // Combine the previous selection with the new updated files
+//       const selection = [...prevState.selection, ...updatedFiles];
+
+//       return { selection }; // Update the state with the combined selection
+//   });
+// };
 
   componentDidUpdate(prevProps) {
     if (prevProps.selection !== this.props.selection) {
