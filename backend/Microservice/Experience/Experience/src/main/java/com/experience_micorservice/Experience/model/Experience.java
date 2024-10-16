@@ -20,12 +20,14 @@ public class Experience {
     private String company;
     private String designation;
     private String location;
-    private String experience;
+    private double experience;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate startDate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate endDate;
     private List<String> skills;
+
+    @Column(columnDefinition = "TEXT")
     private String tasks;
 }

@@ -49,20 +49,20 @@ class Row extends React.Component {
         links: props.row.links,
       },
       Validations: {
-        "IsName": true,
-        "IsDesignation": true,
-        "IsNumber": true,
-        "IsMailId": true,
-        "IsAddress": true,
-        "IsLinks": true,
+        "Isname": true,
+        "Isdesignation": true,
+        "Isnumber": true,
+        "IsmailId": true,
+        "Isaddress": true,
+        "Islinks": true,
       },
       ErrorMsg: {
-        Name: "",
-        Designation: "",
-        Number:"",
-        MailId: "",
-        Address : "",
-        Links: "",
+        name: "",
+        designation: "",
+        number:"",
+        mailId: "",
+        address : "",
+        links: "",
       }
     };
     
@@ -70,7 +70,7 @@ class Row extends React.Component {
 
   componentDidMount(){
     this.setState({ loading: true })
-    axios.post(`http://localhost:5149/details/getDetails/1`)
+    axios.get(`http://localhost:5149/details/getDetails/1`)
     .then(response => {
       this.setState({ row: response.data, loading: false });
         this.setState({ loading: false })
@@ -92,7 +92,6 @@ class Row extends React.Component {
 
 
   handleFieldChange = (fieldName, event) => {
-    debugger;
     let row = { ...this.state.row };
     let Validations = { ...this.state.Validations };
     let ErrorMsg = { ...this.state.ErrorMsg };
@@ -121,7 +120,7 @@ class Row extends React.Component {
     let ErrorMsg = {...this.state.ErrorMsg};
     let Validations = { ...this.state.Validations };
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if(row.name && row.designation && row.number.length == 10 && emailRegex.test(row.mailId) && row.address && row.links)
+    if(row.name && row.designation && row.number && emailRegex.test(row.mailId) && row.address && row.links)
     {
       debugger;
       const payload = {
@@ -142,7 +141,7 @@ class Row extends React.Component {
             variant: 'success',
           }); }
           this.setState({ loading: false })
-        this.props.navigate('/expereince');
+        this.props.navigate('/links');
       })
       .catch(error => {
         const errorMessage = error.response?.data || 'An error occurred';
@@ -156,30 +155,30 @@ class Row extends React.Component {
     }
     else{
       if (row.name === "" || row.name === null) {
-        Validations.IsName = false;
-        ErrorMsg.Name = "Name cannot be empty";
+        Validations.Isname = false;
+        ErrorMsg.name = "Name cannot be empty";
       }
       if(row.designation === "" || row.designation === null){
-        Validations.IsDesignation = false;
-        ErrorMsg.Designation = "Designation cannot be empty";
+        Validations.Isdesignation = false;
+        ErrorMsg.designation = "Designation cannot be empty";
       }
       if(row.number === "" || row.number === null || row.number.length < 10){
-        Validations.IsNumber = false;
-        ErrorMsg.Number = "Number cannot be empty";
+        Validations.Isnumber = false;
+        ErrorMsg.number = "Number cannot be empty";
       }
       if(row.mailId === "" || row.mailId === null || !emailRegex.test(row.mailId)){
-        Validations.IsMailId = false;
-        ErrorMsg.MailId = "MailId cannot be empty";
+        Validations.IsmailId = false;
+        ErrorMsg.mailId = "MailId cannot be empty";
       }
       if(row.address === "" || row.address === null){
-        Validations.IsAddress = false;
-        ErrorMsg.Address = "Address cannot be empty";
+        Validations.Isaddress = false;
+        ErrorMsg.address = "Address cannot be empty";
       }
       if(row.links === "" || row.links === null){
-        Validations.IsLinks = false;
-        ErrorMsg.Links = "Links cannot be empty";
+        Validations.Islinks = false;
+        ErrorMsg.links = "Links cannot be empty";
       }
-      this.setState({ row });
+      this.setState({ row, Validations });
     }
     this.setState({ ErrorMsg });
   }
@@ -224,7 +223,7 @@ class Row extends React.Component {
        <div className="row" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
             <div className="col-md-2 pull-left">
           <TextField
-            error={!Validations.IsName}
+            error={!Validations.Isname}
             required
             id="component-error"
             variant="standard"
@@ -238,7 +237,7 @@ class Row extends React.Component {
           </div>
         <div className="col-md-2 pull-left">
           <TextField
-            error={!Validations.IsDesignation}
+            error={!Validations.Isdesignation}
             required
             id="component-error"
             variant="standard"
@@ -252,7 +251,7 @@ class Row extends React.Component {
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!Validations.IsNumber}
+           error={!Validations.Isnumber}
            required
             id="component-error"
             variant="standard"
@@ -276,7 +275,7 @@ class Row extends React.Component {
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!Validations.IsMailId}
+           error={!Validations.IsmailId}
            required
             id="component-error"
             variant="standard"
@@ -290,7 +289,7 @@ class Row extends React.Component {
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!Validations.IsAddress}
+           error={!Validations.Isaddress}
            required
             id="component-error"
             variant="standard"
@@ -304,7 +303,7 @@ class Row extends React.Component {
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!Validations.IsLinks}
+           error={!Validations.Islinks}
            required
             id="component-error"
             variant="standard"

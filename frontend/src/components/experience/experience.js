@@ -207,7 +207,7 @@ class Row extends React.Component {
         "userId": 1, 
         "id" : row.id,
         "company": row.company,
-        "designation": row.location,
+        "designation": row.designation,
         "location" : row.location,
         "experience" : row.experience,
         "startDate": row.startDate ? this.formatDateToYYYYMMDD(row.startDate) : null, // Format date to DD-MM-YYYY
@@ -450,7 +450,7 @@ class Row extends React.Component {
             onChange={(e) => {
               const { value } = e.target;
               // Allow input only if it's a number or empty (to allow deletion)
-              if (/^\d*$/.test(value)) {
+              if (/^\d*\.?\d*$/.test(value)) {
                 this.handleFieldChange("experience", e);  // Update only if valid
               }
             }}
@@ -587,7 +587,7 @@ class Experience extends React.Component {
   componentDidMount(){
     this.setState({ loading: true });
     this.getSkills();
-    axios.post(`http://localhost:5151/experience/getExperience/1`)
+    axios.get(`http://localhost:5151/experience/getExperience/1`)
     .then(response => {
       this.setState({ rows: response.data, loading: false });
     })

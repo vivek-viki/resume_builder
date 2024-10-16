@@ -298,7 +298,7 @@ class Skills extends React.Component {
   componentDidMount(){
     this.setState({ loading: true });
     this.getSkills();
-    axios.post(`http://localhost:5151/experience/getSkillData/1`)
+    axios.get(`http://localhost:5151/experience/getSkillData/1`)
     .then(response => {
       this.setState({ userSkills: (response.data.skillData || []), id:response.data.id });
     })

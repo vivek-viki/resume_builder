@@ -28,10 +28,9 @@ public class UserDetailsController {
         }
     }
 
-    @PostMapping("/getDetails/{userId}")
+    @GetMapping("/getDetails/{userId}")
     public ResponseEntity<?> getDetails(@PathVariable long userId){
         try{
-            Thread.sleep(3000);
             UserDetails details = service.getDetails(userId);
             return ResponseEntity.status(HttpStatus.OK).body(details);
         }

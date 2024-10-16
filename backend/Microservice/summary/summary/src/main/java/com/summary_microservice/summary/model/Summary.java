@@ -12,5 +12,7 @@ import lombok.NoArgsConstructor;
 public class Summary {
     @Id
     private int userId;
+
+    @Column(columnDefinition = "TEXT")
     private String summary;
 }
