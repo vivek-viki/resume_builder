@@ -85,6 +85,8 @@ class Row extends React.Component {
       loading: false,
       selection : this.props.selection || [],
       id: 0,
+      fileURL : null,
+      fileType : null
     };
   }
 
@@ -177,52 +179,108 @@ class Row extends React.Component {
     }
   };
 
-  fetchFile =async (fileId, file) => {
+  // fetchFile =async (fileId, file) => {
+  //   try {
+  //     if(fileId){
+  //     // Make the axios request to fetch the file as a blob
+  //     const response = await axios.get(`http://localhost:5153/certificates/getCertificates/files/${fileId}`, {
+  //       responseType: 'blob',  // Important: Fetch the file as binary data (blob)
+  //     });
+  
+  //     // Create a URL for the file Blob
+  //     const fileBlob = new Blob([response.data], { type: response.headers['content-type'] });
+  //     const fileURL = URL.createObjectURL(fileBlob);
+  
+  //     // Open the file in a new window
+  //     const newWindow = window.open(fileURL);
+  
+  //     // Optionally, update the state if you want to keep track of the file URL and type
+  //     this.setState({
+  //       fileURL: fileURL,
+  //       fileType: response.headers['content-type'],
+  //     });
+  
+  //     // Clean up the URL after use (optional, but recommended)
+  //     newWindow.onload = () => {
+  //       URL.revokeObjectURL(fileURL);  // Clean up the URL to free memory
+  //     };
+  
+  //   }else{
+  //     const fileURL = URL.createObjectURL(file);
+  //     window.open(fileURL, '_blank'); // Open the file in a new tab
+  //   }
+  // }catch (error) {
+  //   const errorMessage = error.response?.data || 'An error occurred';
+  //   this.props.enqueueSnackbar(errorMessage, {
+  //     variant: 'error',
+  //   });
+  //   }
+  // };
+  
+
+  fetchFile = async (fileId, file) => {
     try {
-      if(fileId){
-      // Make the axios request to fetch the file as a blob
-      const response = await axios.get(`http://localhost:5153/certificates/getCertificates/files/${fileId}`, {
-        responseType: 'blob',  // Important: Fetch the file as binary data (blob)
-      });
-  
-      // Create a URL for the file Blob
-      const fileBlob = new Blob([response.data], { type: response.headers['content-type'] });
-      const fileURL = URL.createObjectURL(fileBlob);
-  
-      // Open the file in a new window
-      const newWindow = window.open(fileURL);
-      
-      if (!newWindow) {
-        alert('Please allow popups for this website to view the file.');
-      }
-  
-      // Optionally, update the state if you want to keep track of the file URL and type
-      this.setState({
-        fileURL: fileURL,
-        fileType: response.headers['content-type'],
-      });
-  
-      // Clean up the URL after use (optional, but recommended)
-      newWindow.onload = () => {
-        URL.revokeObjectURL(fileURL);  // Clean up the URL to free memory
-      };
-  
-    }else{
-      const fileURL = URL.createObjectURL(file);
-      window.open(fileURL, '_blank'); // Open the file in a new tab
+        let newWindow; // Declare newWindow variable at the start
+        if (fileId) {
+            // Make the axios request to fetch the file as a blob
+            const response = await axios.get(`http://localhost:5153/certificates/getCertificates/files/${fileId}`, {
+                responseType: 'blob',  // Important: Fetch the file as binary data (blob)
+            });
+
+            // Create a URL for the file Blob
+            const fileBlob = new Blob([response.data], { type: response.headers['content-type'] });
+            const fileURL = URL.createObjectURL(fileBlob);
+
+            // Open the file based on its MIME type
+            const mimeType = response.headers['content-type'];
+            if (mimeType.startsWith('image/')) {
+                // Open image in a new tab
+                newWindow = window.open(); // Create newWindow for image
+                newWindow.document.write(`<img src="${fileURL}" style="width:100%; height:auto;" />`);
+            } else if (mimeType === 'application/pdf') {
+                // Open PDF in a new tab
+                window.open(fileURL, '_blank');
+            } else if (mimeType.startsWith('text/') || mimeType === 'application/json') {
+                // Open text or JSON files
+                newWindow = window.open(); // Create newWindow for text
+                const reader = new FileReader();
+                reader.onload = () => {
+                    newWindow.document.write(`<pre>${reader.result}</pre>`);
+                };
+                reader.readAsText(fileBlob);
+            } else {
+                // For other file types, simply download or open as binary
+                window.open(fileURL, '_blank');
+            }
+
+            // Optionally, update the state if you want to keep track of the file URL and type
+            this.setState({
+                fileURL: fileURL,
+                fileType: mimeType,
+            });
+
+            // Clean up the URL after use (optional, but recommended)
+            if (newWindow) {
+                newWindow.onload = () => {
+                    URL.revokeObjectURL(fileURL);  // Clean up the URL to free memory
+                };
+            }
+        } else {
+            const fileURL = URL.createObjectURL(file);
+            window.open(fileURL, '_blank'); // Open the file in a new tab
+        }
+    } catch (error) {
+        const errorMessage = error.response?.data || 'An error occurred';
+        this.props.enqueueSnackbar(errorMessage, {
+            variant: 'error',
+        });
     }
-  }catch (error) {
-    const errorMessage = error.response?.data || 'An error occurred';
-    this.props.enqueueSnackbar(errorMessage, {
-      variant: 'error',
-    });
-    }
-  };
-  
+};
+
 
   submitCertificates = () => {
     debugger;
-    // let selection = {...this.state.selection};
+    let isUpdated = 0;
     let selection = Array.isArray(this.state.selection) ? this.state.selection : [];  // Convert to array if not already
     if(Array.isArray(selection) && selection){
       this.setState({ loading: true });
@@ -230,25 +288,32 @@ class Row extends React.Component {
       formData.append('userId', 1);
       formData.append('id', this.state.id);
   
-      // Iterate through each file in the selection
-      selection.forEach((fileData) => {
-        formData.append('file', fileData.file); // Use the same key for multiple files
-        formData.append('fileType', getMimeType(fileData.fileExtension));
-        formData.append('fileName', fileData.fileName);
+
+    // Append each file, file type, and file name individually
+    selection.forEach(fileData => {
+      if (fileData.file instanceof Blob) {
+        formData.append('files', fileData.file); // Append each file
+        formData.append('fileTypes', getMimeType(fileData.fileExtension)); // Append each file type
+        formData.append('fileNames', fileData.fileName); // Append each file name
+    } else{
+      isUpdated = -1;
+    }
+  });
+
       axios.post(`http://localhost:5153/certificates/addCertificates`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       })
       .then(response => {
-        if(response.data == 0){
+        if(response.data == 0 && isUpdated == 0){
         if (this.props.enqueueSnackbar) {
           this.props.enqueueSnackbar('Certificates added successfully', {
             variant: 'success',
           }); }
           this.props.navigate('/projects');
         }
-        if(response.data == -1){
+        if(response.data == -1 || isUpdated == -1){
           if (this.props.enqueueSnackbar) {
             this.props.enqueueSnackbar('Certificates updated successfully', {
               variant: 'success',
@@ -261,8 +326,11 @@ class Row extends React.Component {
         this.props.enqueueSnackbar(errorMessage, {
           variant: 'error',
         });
-      });
-    });}
+      }).finally(() => {
+        this.props.navigate('/projects');
+    });
+    // }
+    ;}
 }
 
 handleFieldChange = (files) => {
@@ -291,23 +359,6 @@ handleFieldChange = (files) => {
     return { selection: combinedSelection }; // Update the state with the combined selection
   });
 };
-
-
-// handleFieldChange = (files) => {
-//   // Use the previous state to avoid replacing existing selection
-//   this.setState((prevState) => {
-//       const updatedFiles = files.map((file) => ({
-//           file: file.file,                  // Store the actual file object
-//           fileName: file.fileName,          // Store the file name
-//           fileExtension: file.fileExtension  // Store the file extension
-//       }));
-
-//       // Combine the previous selection with the new updated files
-//       const selection = [...prevState.selection, ...updatedFiles];
-
-//       return { selection }; // Update the state with the combined selection
-//   });
-// };
 
   componentDidUpdate(prevProps) {
     if (prevProps.selection !== this.props.selection) {

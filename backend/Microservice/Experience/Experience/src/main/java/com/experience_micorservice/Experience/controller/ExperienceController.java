@@ -57,7 +57,7 @@ public class ExperienceController {
         }
     }
 
-    @PostMapping("/getExperience/{userId}")
+    @GetMapping("/getExperience/{userId}")
     public ResponseEntity<?> getExperience(@PathVariable int userId){
         try {
             List<Experience> data = service.getExperience(userId);
@@ -124,7 +124,7 @@ public class ExperienceController {
         }
     }
 
-    @PostMapping("/getSkillData/{userId}")
+    @GetMapping("/getSkillData/{userId}")
     public ResponseEntity<?> getSkillData(@PathVariable int userId){
         try {
             AddSkills data = service.getSkillData(userId);

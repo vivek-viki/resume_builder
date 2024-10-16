@@ -47,10 +47,10 @@ class Row extends React.Component {
         description : props.row.description,
       },
       Validations: {
-        "IsProjectName": true,
-        "IsStartDate": true,
-        "IsEndDate": true,
-        "IsDescription": true
+        "IsprojectName": true,
+        "IsstartDate": true,
+        "IsendDate": true,
+        "Isdescription": true
       },
       ErrorMsg: {
         projectName: "",
@@ -89,7 +89,6 @@ class Row extends React.Component {
   
     return `${year}-${month}-${day}`; // Format as YYYY-MM-DD
   }
-  
 
   submitProjects = () => {
     let row = {...this.state.row};
@@ -150,19 +149,19 @@ class Row extends React.Component {
     }
     else{
       if (row.projectName === "" || row.projectName === null) {
-        Validations.IsProjectName = false;
+        Validations.IsprojectName = false;
         ErrorMsg.projectName = "ProjectName cannot be empty";
       }
       if(row.startDate === "" || row.startDate === null){
-        Validations.IsStartDate = false;
+        Validations.IsstartDate = false;
         ErrorMsg.startDate = "StartDate cannot be empty";
       }
       if(row.endDate === "" || row.endDate === null){
-        Validations.IsEndDate = false;
+        Validations.IsendDate = false;
         ErrorMsg.endDate = "EndDate cannot be empty";
       }
       if(row.description === "" || row.description === null){
-        Validations.IsDescription = false;
+        Validations.Isdescription = false;
         ErrorMsg.description = "Description cannot be empty";
       }
       this.setState({ row, Validations });
@@ -272,7 +271,7 @@ class Row extends React.Component {
        <div className="row" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
             <div className="col-md-2 pull-left">
             <TextField
-            error={!Validations.IsProjectName}
+            error={!Validations.IsprojectName}
             required
             id="component-error"
             variant="standard"
@@ -414,6 +413,33 @@ class Projects extends React.Component {
       });
     }
 
+    ResumeGenerator = () => {
+      debugger;
+      this.setState({ loading: true })
+      axios.post(`http://localhost:5155/resume/generateResume/1`,  {},{
+        responseType: 'blob', // Set response type to blob
+    })
+    .then(response => {
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Open the PDF in a new tab
+      window.open(url, '_blank');
+
+      // Clean up the URL object (optional, but a good practice)
+      window.URL.revokeObjectURL(url);
+    })
+      .catch(error => {
+        const errorMessage = error.response?.data || 'An error occurred';
+        this.props.enqueueSnackbar(errorMessage, {
+          variant: 'error',
+        });
+      })
+      .finally(() => {
+        this.setState({ loading: false });
+      });
+    }
+  
 
   render() {
    const {rows} = this.state;
@@ -437,10 +463,16 @@ class Projects extends React.Component {
             className={this.props.classes.containedbutton}
             disabled = {(rows[0]?.id === 0)}
             >add projects</Button>
+             <Tooltip title={"Generate Resume"}>
+    <IconButton aria-label="fingerprint" color="success"  disabled={!rows.length || rows[0]?.id === 0}>
+        <Fingerprint onClick={ this.ResumeGenerator} 
+        />
+      </IconButton>
+      </Tooltip>
+            <Loading loading={this.state.loading} {...this.props}/>
             </div>
           </TableCell>
             </TableRow>
-            <Loading loading={this.state.loading} {...this.props}/>
           </TableHead>
           <TableBody>
             {rows.map((row) => (

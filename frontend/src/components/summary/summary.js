@@ -60,7 +60,7 @@ class Row extends React.Component {
 
   componentDidMount(){
     this.setState({ loading: true });
-    axios.post(`http://localhost:5150/summary/getSummary/1`)
+    axios.get(`http://localhost:5150/summary/getSummary/1`)
     .then(response => {
       this.setState({ summary: response.data.summary, loading: false });
     })

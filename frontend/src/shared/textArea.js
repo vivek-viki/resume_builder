@@ -74,26 +74,36 @@ class MinHeightTextarea extends Component {
     }
   }
 
-  handleSummary = event => {
-    const summary = event.target.value;
+  handleSummary = (event) => {
+    debugger;
+    let summary = event.target.value;
 
-    // Limit the characters to a maximum of 350
-    if (summary.length <= 350 && this.props.enable) {
+    if (summary.length > 400 && this.props.enable) {
+      summary = summary.substring(0, 400);
+    }
+  
+  
+    // Limit the characters to a maximum of 400
+    if (summary.length <= 400 && this.props.enable) {
       this.setState({
         summary: summary,
         charCount: summary.length
       });
       
-    this.props.onSummaryChange(summary);
-    }
-    else {
+      // Call the parent's summary change handler if it's provided
+      this.props.onSummaryChange(summary);
+    }else{
       this.setState({
-        summary: summary
+        summary: summary,
+        charCount: summary.length
       });
       
-    this.props.onSummaryChange(summary);
+      // Call the parent's summary change handler if it's provided
+      this.props.onSummaryChange(summary);
+
     }
-  }
+  };
+  
 
   render() {
     const { Textarea } = this;
@@ -115,7 +125,7 @@ class MinHeightTextarea extends Component {
         />
         {this.props.enable ? 
         <Typography variant="caption" display="block" gutterBottom>
-          {charCount}/350 characters
+          {charCount}/400 characters
         </Typography> 
         :
         <></>}

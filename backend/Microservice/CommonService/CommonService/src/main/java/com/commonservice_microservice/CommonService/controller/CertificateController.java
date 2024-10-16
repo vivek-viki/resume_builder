@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin
@@ -26,24 +24,32 @@ public class CertificateController {
     public ResponseEntity<?> addCertificates(
             @RequestParam("userId") int userId,
             @RequestParam("id") int id,
-            @RequestParam("fileType") String fileType,
-            @RequestParam("fileName") String fileName,
-            @RequestParam("file") MultipartFile file
+            @RequestParam("fileTypes") List<String> fileTypes,
+            @RequestParam("fileNames") List<String> fileNames,
+            @RequestParam("files") List<MultipartFile> files
 
     ){
         try {
-            if (!isCertificateExists(userId, fileName)) {
-                certificateService.addCertificate(userId, id, fileType, fileName, file);
+            int isUpdated = 0;
+            for (int i = 0; i < files.size(); i++) {
+                MultipartFile file = files.get(i);
+                String fileType = fileTypes.get(i);
+                String fileName = fileNames.get(i);
 
+                if (!isCertificateExists(userId, fileName)) {
+                    certificateService.addCertificate(userId, id, fileType, fileName, file);
+                }else {
+                    isUpdated = -1;
+                }
 
-                return ResponseEntity.status(HttpStatus.OK).body(0); // file added successfully
             }
+            return ResponseEntity.status(HttpStatus.OK).body(isUpdated); // file added successfully
         }catch (Exception e) {
             // Handle any other exceptions that may occur
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An unexpected error occurred: " + e.getMessage());
         }
-        return ResponseEntity.status(HttpStatus.OK).body(-1); // -1 file already present
+//        return ResponseEntity.status(HttpStatus.OK).body(-1); // -1 file already present
     }
 
 

@@ -28,11 +28,11 @@ public class SummaryController {
         }
     }
 
-    @PostMapping("/getSummary")
-    public ResponseEntity<?> getSummary(@RequestBody Summary summary){
+    @GetMapping("/getSummary/{userId}")
+    public ResponseEntity<?> getSummary(@PathVariable int userId){
         try {
 //            Thread.sleep(5000);
-            Summary data = service.getSummary(summary.getUserId());
+            Summary data = service.getSummary(userId);
 
             return ResponseEntity.status(HttpStatus.OK).body(data);
         } catch (Exception e) {

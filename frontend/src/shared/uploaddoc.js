@@ -43,7 +43,7 @@ class InputFileUpload extends Component {
   
     // Update the state with unique new files
     this.setState(prevState => ({
-      selection: [...prevState.selection, ...filteredNewSelection] // Combine previous files with unique new ones
+      selection: [...filteredNewSelection, ...prevState.selection]// Combine previous files with unique new ones
     }));
   
     // Pass the updated selection to the parent component

@@ -518,7 +518,6 @@ class Education extends React.Component {
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="endDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="cgpa"><StarIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="specialization"><FolderSpecialIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
-              {/* <TableCell className={` ${this.props.classes.tableHeaderCells}`}><Tooltip title="Tasks"></Tooltip></TableCell> */}
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}> 
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <Button variant="contained"
@@ -533,9 +532,8 @@ class Education extends React.Component {
         />
       </IconButton>
       </Tooltip>
+      <Loading loading={this.state.loading} {...this.props}/>
   </div>
-  <Loading loading={this.state.loading} {...this.props}/>
-
           </TableCell>
             </TableRow>
           </TableHead>
