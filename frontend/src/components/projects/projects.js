@@ -31,6 +31,9 @@ import Moment from "react-moment";
 import Chip from '@mui/material/Chip';
 import Loading from '../../shared/loading';
 import dayjs from 'dayjs';
+import AddRoadIcon from '@mui/icons-material/AddRoad';
+import Stack from '@mui/material/Stack';
+import InputAdornment from '@mui/material/InputAdornment';
 
 
 class Row extends React.Component {
@@ -45,19 +48,24 @@ class Row extends React.Component {
         startDate: props.row.startDate,
         endDate: props.row.endDate,
         description : props.row.description,
+        skills : props.row.skills,
       },
       Validations: {
         "IsprojectName": true,
         "IsstartDate": true,
         "IsendDate": true,
-        "Isdescription": true
+        "Isdescription": true,
+        "Isskills" : true,
       },
       ErrorMsg: {
         projectName: "",
         startDate: "",
         endDate: "",
-        description: ""
+        description: "",
+        skills : "",
       },
+      skillData: this.props.skillsList || [],
+      New_Skills : []
     };
     
   }
@@ -68,6 +76,72 @@ class Row extends React.Component {
     // if (row.Id !== 0)
     this.setState({ row  });
   };
+
+  handleDelete = (chipToDelete) => {
+    this.setState((prevState) => {
+      const updatedSkills = prevState.row.skills.filter((skill) => skill !== chipToDelete);
+  
+      return {
+        row: {
+          ...prevState.row,
+          skills: updatedSkills, // Update the skills array
+        },
+        Validations: {
+          ...prevState.Validations,
+          Isskills: updatedSkills.length === 0 ? false : true, // Set Isskills to false if no skills left
+        },
+      };
+    });
+  };
+
+  onSelectSkill = (selectedSkill) => {
+    let validations = {...this.state.Validations};
+    validations.Isskills = true;
+    this.setState((prevState) => ({
+      row: {
+        ...prevState.row,
+        skills: prevState.row.skills.includes(selectedSkill)
+          ? prevState.row.skills // If skill already exists, keep the array unchanged
+          : [...prevState.row.skills, selectedSkill] // Otherwise, add the new skill
+      },
+      Validations: validations
+    }));
+  }
+
+  newSkills = () => {
+    this.setState((prevState) => {
+      // Access skills from prevState.row
+      const currentSkills = prevState.row.skills || [];
+  
+      // Avoid duplicates by checking if New_Skills is already in the array
+      const updatedSkills = currentSkills.includes(this.state.New_Skills)
+        ? currentSkills
+        : [...currentSkills, this.state.New_Skills];
+  
+      // Update skills inside the row object and reset New_Skills
+      return {
+        row: {
+          ...prevState.row, // Spread the existing properties of row
+          skills: updatedSkills, // Update skills
+        },
+        New_Skills: "", // Reset New_Skills
+      };
+    });
+  };
+
+  handleSkillChange = (fieldName, event) => {
+    let validations = {...this.state.Validations};
+    let ErrorMsg = { ...this.state.ErrorMsg };
+    if (event.target.value) {
+      validations.Isskills = true;
+      ErrorMsg.skills = "";
+    } else {
+      validations.Isskills = false;
+      ErrorMsg.skills = `${fieldName} cannot be empty`;
+    }
+    this.setState({ New_Skills : event.target.value, Validations: validations, ErrorMsg });
+  }
+
 
 
   formatDateToYYYYMMDD = (date) => {
@@ -95,7 +169,7 @@ class Row extends React.Component {
     let ErrorMsg = {...this.state.ErrorMsg};
     let Validations = {...this.state.Validations};
     debugger;
-    if(row.projectName && row.startDate && row.endDate && row.description)
+    if(row.projectName && row.startDate && row.skills && row.description)
     {
       const payload = {
         "userId": 1, 
@@ -103,6 +177,7 @@ class Row extends React.Component {
         "projectName": row.projectName,
         "startDate": row.startDate ? this.formatDateToYYYYMMDD(row.startDate) : null, // Format date to DD-MM-YYYY
         "endDate" : row.endDate ? this.formatDateToYYYYMMDD(row.endDate) : null,
+        "skills" : row.skills,
         "description" : row.description
       };
       this.setState({ loading: true })
@@ -114,6 +189,7 @@ class Row extends React.Component {
           row.projectName = data.data.projectName;
           row.startDate = data.data.startDate;
           row.endDate = data.data.endDate;
+          row.skills = data.data.skills;
           row.description = data.data.description;
           this.setState({row});
           if (this.props.enqueueSnackbar) {
@@ -127,6 +203,7 @@ class Row extends React.Component {
             row.projectName = data.data.projectName;
             row.startDate = data.data.startDate;
             row.endDate = data.data.endDate;
+            row.skills = data.data.skills;
             row.description = data.data.description;
             this.setState({row});
             if (this.props.enqueueSnackbar) {
@@ -159,6 +236,10 @@ class Row extends React.Component {
       if(row.endDate === "" || row.endDate === null){
         Validations.IsendDate = false;
         ErrorMsg.endDate = "EndDate cannot be empty";
+      }
+      if(row.skills.length === 0){
+        Validations.Isskills = false;
+        ErrorMsg.skills = "skills cannot be empty";
       }
       if(row.description === "" || row.description === null){
         Validations.Isdescription = false;
@@ -203,6 +284,15 @@ class Row extends React.Component {
     this.setState({ row });
   }
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.skillsList !== this.props.skillsList) {
+      this.setState({
+        skillData: this.props.skillsList,
+      });
+    }
+  }
+
+
   render() {
     const { row, ErrorMsg, Validations } = this.state;
     return (
@@ -243,6 +333,16 @@ class Row extends React.Component {
             />
           )}
               </div>
+            </TableCell>
+            <TableCell className={this.props.classes.tableCell}> 
+          <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {row.skills.map((skill, index) => (
+            <Chip
+              key={index}
+              label={skill}
+            />
+          ))}
+          </Box>
             </TableCell>
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>{row.description}</div></TableCell>
           <TableCell align="right">
@@ -288,6 +388,8 @@ class Row extends React.Component {
             label = {"startDate"}
             handleDate = {this.handleDate}
             date = {row.startDate}
+            required={!Validations.IsstartDate}
+            error={!row.startDate}
             {...this.props}
             />
             </div>
@@ -297,11 +399,61 @@ class Row extends React.Component {
             handleDate = {this.handleDate}
             date = {row.endDate}
             minDate={row.startDate ? dayjs(row.startDate) : null}
+            required={false}
+            error={false}
             {...this.props}
             />
                 </div>
+                <div className="col-md-2 pull-left">
+        <Stack direction="row" spacing={1}>
+        {this.state.skillData.map((skill, index) => (
+          <Chip
+            key={index}          
+            label={skill}      
+            onClick={() => this.onSelectSkill(skill)}
+          />
+        ))}
+      </Stack>
+          <Box mt={2} sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {row.skills.map((skill, index) => (
+            <Chip
+              key={index}
+              label={skill}
+              onDelete={() => this.handleDelete(skill)} // Handle deletion
+            />
+          ))}
+        </Box>
+        </div>
                 </div>
-                &nbsp;
+                <div className="row" style={{ marginBottom: '10px' }}>
+        <TextField
+            required
+            id="component-error"
+            variant="standard"
+            label="Skills"
+            sx={{ width: '100%'}}
+            error={!Validations.Isskills}
+            value={this.state.New_Skills}
+            // helperText={ErrorMsg.College}
+            onChange={(e) => this.handleSkillChange("Skills", e)}
+            inputProps={{ maxLength: 50 }}
+            InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={this.newSkills}
+                      disabled = {this.state.New_Skills == ""}  // Define what happens on click
+                      sx={{ transform: 'translateY(-7px)' }}
+                    >
+                      Add Skills
+                    </Button>
+                  </InputAdornment>
+                ),
+              }}
+          />
+          </div>
                 <div className="row" >
                 <MinHeightTextarea 
         //  error={!this.state.row.Validations.IsTasks}
@@ -334,6 +486,7 @@ class Projects extends React.Component {
     super(props);
     this.state = {
       rows : [],
+      skillsList : [],
       activeStep : 7
     } 
   }
@@ -354,8 +507,23 @@ class Projects extends React.Component {
     });
   };
 
+
+  getSkills = () => {
+    axios.get(`http://localhost:5151/experience/getSkills`)
+    .then(response => {
+      this.setState({ skillsList: response.data});
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+  }
+
   componentDidMount(){
     this.setState({ loading: true });
+    this.getSkills();
     axios.get(`http://localhost:5153/projects/getProject/1`)
     .then(response => {
       this.setState({ rows: response.data});
@@ -405,7 +573,8 @@ class Projects extends React.Component {
         projectName: "",
         startDate: "",
         endDate: "",
-        description : ""
+        description : "",
+        skills : [],
       }
       this.state.rows.unshift(row)
       this.setState({
@@ -442,7 +611,7 @@ class Projects extends React.Component {
   
 
   render() {
-   const {rows} = this.state;
+   const {rows, skillsList} = this.state;
     return (  
       <Card >
       {/* <CardActionArea > */}
@@ -456,6 +625,7 @@ class Projects extends React.Component {
               <TableCell className={` ${this.props.classes.tableHeaderCells}`} ><div className={this.props.classes.iconWrapper}> <Tooltip title="Projects"><AccountTreeIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="StartDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="EndDate"><CalendarMonthIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
+              <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Skills"><AddRoadIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}><div className={this.props.classes.iconWrapper}><Tooltip title="Description"><DescriptionIcon sx={{ color: 'grey' }}/></Tooltip></div></TableCell>
               <TableCell className={` ${this.props.classes.tableHeaderCells}`}> <div className={this.props.classes.iconWrapper}>
             <Button variant="contained" 
@@ -480,6 +650,7 @@ class Projects extends React.Component {
               DeleteProject = {this.DeleteProject}
               updateTableData = {this.updateTableData}
               rows = {rows}
+              skillsList = {skillsList}
               {...this.props}
               />
             ))}

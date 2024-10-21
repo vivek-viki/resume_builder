@@ -35,6 +35,8 @@ public class ProjectController {
                 Project savedProject = projectService.updateProject(updatedProject);
                 return ResponseEntity.status(HttpStatus.OK).body(savedProject);
             }else {
+                if(project.getEndDate() == null)
+                    project.setStringEndDate("Present");
                 Project data = projectService.addProject(project);
 
                 return ResponseEntity.status(HttpStatus.OK).body(data);

@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.Date;
+import java.util.List;
 
 @Data
 @Entity
@@ -25,6 +25,12 @@ public class Project {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate endDate;
+
+    private List<String> skills;
+
+    @Column(columnDefinition = "TEXT")
     private String description;
+
+    private String stringEndDate;
 
 }

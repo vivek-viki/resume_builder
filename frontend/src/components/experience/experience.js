@@ -55,14 +55,15 @@ class Row extends React.Component {
         experience: props.row.experience,
         skills: props.row.skills,
         tasks: props.row.tasks,
+        stringEndDate : props.row.stringEndDate
       },
       Validations: {
         "Iscompany": true,
         "Isdesignation": true,
         "Islocation": true,
         "Isexperience": true,
-        "IsStartDate" : true,
-        "IsEndDate"  :true,
+        "IsstartDate" : true,
+        "IsendDate"  :true,
         "Isskills": true,
         "Istasks": true
       },
@@ -201,7 +202,7 @@ class Row extends React.Component {
     let row = {...this.state.row};
     let Validations = { ...this.state.Validations };
     let ErrorMsg = {...this.state.ErrorMsg};
-    if(row.company && row.designation && row.location && row.experience && row.skills.length > 0 && row.tasks)
+    if(row.company && row.designation && row.location && row.experience && row.startDate && row.skills && row.tasks)
     {
       const payload = {
         "userId": 1, 
@@ -226,7 +227,11 @@ class Row extends React.Component {
           row.location = data.data.location;
           row.experience = data.data.experience;
           row.startDate = data.data.startDate;
-          row.endDate = data.data.endDate;
+          if(data.data.endDate == null){
+            row.endDate = data.data.stringEndDate;
+          }else{
+            row.endDate = data.data.endDate;
+          }
           row.skills = data.data.skills;
           row.tasks = data.data.tasks;
           this.setState({row});
@@ -243,7 +248,11 @@ class Row extends React.Component {
             row.location = data.data.location;
             row.experience = data.data.experience;
             row.startDate = data.data.startDate;
-            row.endDate = data.data.endDate;
+            if(data.data.endDate == null){
+              row.endDate = data.data.stringEndDate;
+            }else{
+              row.endDate = data.data.endDate;
+            }
             row.skills = data.data.skills;
             row.tasks = data.data.tasks;
             this.setState({row});
@@ -282,6 +291,10 @@ class Row extends React.Component {
         Validations.Isexperience = false;
         ErrorMsg.experience = "experience cannot be empty";
       }
+      if(row.startDate === "" || row.startDate === null){
+        Validations.IsstartDate = false;
+        ErrorMsg.startDate = "startDate cannot be empty";
+      }
       if(row.skills.length === 0){
         Validations.Isskills = false;
         ErrorMsg.skills = "skills cannot be empty";
@@ -316,8 +329,14 @@ class Row extends React.Component {
     }
   }
 
+  isValidDateFormat = (dateString) => {
+    const regex = /^\d{4}-\d{2}-\d{2}$/; // Check if format is YYYY-MM-DD
+    return regex.test(dateString);
+  };
+
   render() {
     const { row, Validations } = this.state;
+    debugger;
     return (
       <React.Fragment>
         
@@ -348,16 +367,23 @@ class Row extends React.Component {
               </div>
           </TableCell>
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}>
-          {row.endDate && (
-              <Chip
-                label={row.endDate ? (
-                  <Moment format={"YYYY-MM-DD"}>
-                    {row.endDate}
-                  </Moment>
-                ) : ''}
-                variant="filled"
-              />
-            )}
+          {row.endDate == null ? (  // Check if row.endDate is null
+  <Chip
+    label={row.stringEndDate} // Display the default string if endDate is null
+    variant="filled"
+  />
+) : (
+  <Chip
+    label={typeof row.endDate === 'string' && !this.isValidDateFormat(row.endDate) ? (
+      row.endDate // Display the string if it's not in the correct date format
+    ) : (
+      <Moment format={"YYYY-MM-DD"}>
+        {row.endDate}
+      </Moment>
+    )}
+    variant="filled"
+  />
+)}
             </div>
           </TableCell>
           <TableCell className={this.props.classes.tableCell}> 
@@ -463,6 +489,8 @@ class Row extends React.Component {
             label = {"startDate"}
             handleDate = {this.handleDate}
             date = {row.startDate}
+            required={!Validations.IsstartDate}
+            error={!row.startDate}
             {...this.props}
             />
             </div>
@@ -472,6 +500,8 @@ class Row extends React.Component {
             handleDate = {this.handleDate}
             date = {row.endDate}
             minDate={row.startDate ? dayjs(row.startDate) : null}
+            required={false}
+            error={false}
             {...this.props}
             />
                 </div>
@@ -563,12 +593,6 @@ class Experience extends React.Component {
       skillsList : [],
       activeStep : 2
     } 
-  }
-  submitexperienceParent = (row) => {
-    let rows = [...this.state.rows];
-    rows[0].id = row.id;
-        this.setState({rows});
-        
   }
 
   getSkills = () => {
@@ -716,7 +740,6 @@ class Experience extends React.Component {
           <TableBody>
             {rows.map((row) => (
               <Row key={row.id} row={row} 
-              submitexperienceParent = {this.submitexperienceParent}
               DeleteExperience = {this.DeleteExperience}
               updateTableData = {this.updateTableData}
               rows = {rows}

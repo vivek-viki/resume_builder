@@ -46,6 +46,8 @@ public class ExperienceController {
                 Experience savedExperience = service.updateExperience(updatedExperience);
                 return ResponseEntity.status(HttpStatus.OK).body(savedExperience);
             } else {
+                if(experience.getEndDate() == null)
+                    experience.setStringEndDate("Present");
                 Experience data = service.addExperience(experience);
 
                 return ResponseEntity.status(HttpStatus.OK).body(data);

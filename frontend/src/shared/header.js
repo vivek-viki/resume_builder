@@ -227,8 +227,11 @@ class ResponsiveAppBar extends Component {
       anchorElUser: null,
       anchorElCertificates: null,
       anchorElProjects: null,
+      anchorElLinks: null,
       selection : [], // State for certificates dropdown
-      project:[]
+      project:[],
+      userDetails : [],
+      links: []
     };
   }
 
@@ -244,6 +247,24 @@ class ResponsiveAppBar extends Component {
     this.setState({ anchorElCertificates: event.currentTarget });
   };
 
+  handleOpenProjectsMenu = (event) => {
+    this.setState({ anchorElProjects: event.currentTarget });
+  };
+
+  handleCloseProjectsMenu = () => {
+    this.setState({ anchorElProjects: null });
+  };
+
+  handleOpenLinksMenu = (event) => {
+    this.setState({ anchorElLinks: event.currentTarget });
+  };
+
+  handleCloseLinksMenu = () => {
+    this.setState({ anchorElLinks: null });
+  };
+
+
+
   handleCloseNavMenu = () => {
     this.setState({ anchorElNav: null });
   };
@@ -256,23 +277,23 @@ class ResponsiveAppBar extends Component {
     this.setState({ anchorElCertificates: null });
   };
 
-  handleOpenProjectsMenu = (event) => {
-    this.setState({ anchorElProjects: event.currentTarget });
-  };
+  // handleOpenProjectsMenu = (event) => {
+  //   this.setState({ anchorElProjects: event.currentTarget });
+  // };
 
-  handleCloseProjectsMenu = () => {
-    this.setState({ anchorElProjects: null });
-  };
+  // handleCloseProjectsMenu = () => {
+  //   this.setState({ anchorElProjects: null });
+  // };
 
-  handleCloseNavMenuLinks = (page) => {
-    if (page === 'Projects') {
-      this.props.navigate('/personal');
-    }
-    this.handleCloseNavMenu();
-  };
+  // handleCloseNavMenuLinks = (page) => {
+  //   if (page === 'Projects') {
+  //     this.props.navigate('/personal');
+  //   }
+  //   this.handleCloseNavMenu();
+  // };
 
   getProjects = () => {
-  this.setState({ loading: true });
+  // this.setState({ loading: true });
   axios.get(`http://localhost:5153/projects/getProject/1`)
   .then(response => {
     this.setState({ project: response.data});
@@ -284,8 +305,32 @@ class ResponsiveAppBar extends Component {
     });
   })
   .finally(() => {
-    this.setState({ loading: false });
+    // this.setState({ loading: false });
   });
+  }
+
+  componentDidUpdate = () =>{
+  // getUserDetails = () =>{
+    axios.get(`http://localhost:5149/details/getDetails/1`)
+    .then(response => {
+      let links = {...this.state.links};
+  if (typeof response.data.links === 'string') {
+    links = response.data.links.split(','); // Convert string to array
+  } else if (Array.isArray(response.data.links)) {
+    links = response.data.links; // Already an array
+  }
+      this.setState({ userDetails : response.data, links : links, loading: false });
+        // this.setState({ loading: false })
+    })
+    .catch(error => {
+      const errorMessage = error.response?.data || 'An error occurred';
+      this.props.enqueueSnackbar(errorMessage, {
+        variant: 'error',
+      });
+    })
+    .finally(() => {
+      // this.setState({ loading: false });
+    });
   }
 
   componentDidMount(){
@@ -362,7 +407,7 @@ class ResponsiveAppBar extends Component {
 
 
   render() {
-    const { anchorElNav, anchorElUser, anchorElCertificates, anchorElProjects, selection, project } = this.state;
+    const { anchorElNav, anchorElUser, anchorElCertificates, anchorElProjects, anchorElLinks, selection, project, userDetails, links } = this.state;
 
     return (
       <React.Fragment>
@@ -372,7 +417,7 @@ class ResponsiveAppBar extends Component {
             <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
             <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '70%' }}>
               <Link to='/' style={{ textDecoration: 'none', color: 'inherit' }}>
-                <Typography
+              <Typography
                   variant="h6"
                   noWrap
                   component="a"
@@ -382,121 +427,112 @@ class ResponsiveAppBar extends Component {
                     fontFamily: 'monospace',
                     fontWeight: 700,
                     letterSpacing: '.3rem',
-                    color: 'inherit',
+                    color: 'inherit',   // This sets the text color to inherit from its parent
                     textDecoration: 'none',
-                    whiteSpace: 'normal'
+                    whiteSpace: 'normal' // Ensures wrapping for long text
                   }}
                 >
-                  VIVEK MUKUNDA
+                  {userDetails.name ? userDetails.name : "Your Name"}
                 </Typography>
-                <Typography sx={{ whiteSpace: 'normal' }}>SOFTWARE ENGINEER</Typography>
+                <Typography sx={{ whiteSpace: 'normal' }}>{userDetails.designation ? userDetails.designation : "Yourd Designation " }</Typography>
               </Link>
             </div>
 
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-              {/* Projects Button with Dropdown */}
-              <div>
-                <Button
-                  onClick={this.handleOpenProjectsMenu}
-                  sx={{ my: 2, color: 'white', display: 'block' }}
-                >
-                  Projects
-                </Button>
-                <Menu
-                  anchorEl={anchorElProjects}
-                  open={Boolean(anchorElProjects)}
-                  onClose={this.handleCloseProjectsMenu}
-                >
-                  {project.map((project) => (
-                    <MenuItem
-                      key={project.projectName}
-                      onClick={() => this.handleCloseProjectsMenu()} // Handle navigation or action here
-                    >
-                      {project.name}
-                    </MenuItem>
-                  ))}
-                </Menu>
-              </div>
 
-                {/* {pages.map((page) => (
-                <div key={page}>
-                  {page === 'Projects' ? (
-                    <>
-                      <Button
-                        onClick={this.handleOpenProjectsMenu}
-                        sx={{ my: 2, color: 'white', display: 'block' }}
-                      >
-                        {page}
-                      </Button>
-                      <Menu
-                        anchorEl={anchorElProjects}
-                        open={Boolean(anchorElProjects)}
-                        onClose={this.handleCloseProjectsMenu}
-                      >
-                        {projects.map((project) => (
-                          <MenuItem
-                            key={project.id}
-                            // onClick={() => this.fetchFile(select.id)}
-                          >
-                            {project.projectName}
-                          </MenuItem>
-                        ))}
-                      </Menu>
-                    </>
-                  ) : (
-                    <Button
-                      key={page}
-                      onClick={() => this.handleCloseNavMenuLinks(page)}
-                      sx={{ my: 2, color: 'white', display: 'block' }}
-                    >
-                      {page}
-                    </Button>
-                  )}
-                </div>
-              ))}  */}
+            {pages.map((page) => (
+  <div key={page}>
+    {page === 'Certificates' ? (
+      <>
+        <Button
+          onClick={this.handleOpenCertificatesMenu}
+          sx={{ my: 2, color: 'white', display: 'block' }}
+        >
+          {page}
+        </Button>
+        <Menu
+          anchorEl={anchorElCertificates}
+          open={Boolean(anchorElCertificates)}
+          onClose={this.handleCloseCertificatesMenu}
+        >
+            {( selection.length > 0) ? (
+        selection.map((select) => (
+          <MenuItem 
+          key={select.fileName}
+          onClick={() => this.fetchFile(select.id)}
+          >
+            {select.fileName}
+          </MenuItem>
+        ))
+      ) : (
+        <MenuItem disabled>No certificates added</MenuItem>  // Show a message if links are empty
+      )}
+        </Menu>
+      </>
+    ) : page === 'Projects' ? (
+      <>
+        <Button
+          onClick={this.handleOpenProjectsMenu}
+          sx={{ my: 2, color: 'white', display: 'block' }}
+        >
+          {page}
+        </Button>
+        <Menu
+          anchorEl={anchorElProjects}
+          open={Boolean(anchorElProjects)}
+          onClose={this.handleCloseProjectsMenu}
+        >
+           {( project.length > 0) ? (
+        project.map((proj) => (
+          <MenuItem 
+            key={proj}
+          >
+            {proj.projectName}
+          </MenuItem>
+        ))
+      ) : (
+        <MenuItem disabled>No projects added</MenuItem>  // Show a message if links are empty
+      )}
+        </Menu>
+      </>
+    ) : page === 'Links' ? (
+      <>
+        <Button
+          onClick={this.handleOpenLinksMenu}
+          sx={{ my: 2, color: 'white', display: 'block' }}
+        >
+          {page}
+        </Button>
+        <Menu
+          anchorEl={anchorElLinks}
+          open={Boolean(anchorElLinks)}
+          onClose={this.handleCloseLinksMenu}
+        >
+         {(Array.isArray(links) && links.length > 0) ? (
+        links.map((link, index) => (
+          <MenuItem 
+            key={index}
+            onClick={() => window.open(link, '_blank')} // Open link in a new tab
+          >
+            {link}
+          </MenuItem>
+        ))
+      ) : (
+        <MenuItem disabled>No links added</MenuItem>  // Show a message if links are empty
+      )}
+        </Menu>
+      </>
+    ) : null}
+  </div>
+))}
 
-              {pages.map((page) => (
-                <div key={page}>
-                  {page === 'Certificates' ? (
-                    <>
-                      <Button
-                        onClick={this.handleOpenCertificatesMenu}
-                        sx={{ my: 2, color: 'white', display: 'block' }}
-                      >
-                        {page}
-                      </Button>
-                      <Menu
-                        anchorEl={anchorElCertificates}
-                        open={Boolean(anchorElCertificates)}
-                        onClose={this.handleCloseCertificatesMenu}
-                      >
-                        {selection.map((select) => (
-                          <MenuItem
-                            key={select.fileName}
-                            onClick={() => this.fetchFile(select.id)}
-                          >
-                            {select.fileName}
-                          </MenuItem>
-                        ))}
-                      </Menu>
-                    </>
-                  ) : (
-                    <Button
-                      key={page}
-                      onClick={() => this.handleCloseNavMenuLinks(page)}
-                      sx={{ my: 2, color: 'white', display: 'block' }}
-                    >
-                      {page}
-                    </Button>
-                  )}
-                </div>
-              ))}
+
             </Box>
 
             <Box sx={{ flexGrow: 0 }}>
               <Tooltip title="Open settings">
                 <IconButton onClick={this.handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                  <Avatar alt="Remy Sharp"  />
                 </IconButton>
               </Tooltip>
               <Menu

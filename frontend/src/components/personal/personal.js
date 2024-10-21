@@ -69,6 +69,7 @@ class Row extends React.Component {
   }
 
   componentDidMount(){
+    debugger;
     this.setState({ loading: true })
     axios.get(`http://localhost:5149/details/getDetails/1`)
     .then(response => {
@@ -120,7 +121,7 @@ class Row extends React.Component {
     let ErrorMsg = {...this.state.ErrorMsg};
     let Validations = { ...this.state.Validations };
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if(row.name && row.designation && row.number && emailRegex.test(row.mailId) && row.address && row.links)
+    if(row.name && row.designation  && emailRegex.test(row.mailId) && row.address && row.links)
     {
       debugger;
       const payload = {
@@ -162,7 +163,7 @@ class Row extends React.Component {
         Validations.Isdesignation = false;
         ErrorMsg.designation = "Designation cannot be empty";
       }
-      if(row.number === "" || row.number === null || row.number.length < 10){
+      if(row.number === "" || row.number === null || row.number.toString().length < 10){
         Validations.Isnumber = false;
         ErrorMsg.number = "Number cannot be empty";
       }
@@ -284,7 +285,7 @@ class Row extends React.Component {
             value={row.mailId}
             // helperText={ErrorMsg.MailId}
             onChange={(e) => this.handleFieldChange("mailId", e)}
-            inputProps={{ maxLength: 20 }}
+            inputProps={{ maxLength: 30 }}
           />
         </div>
         <div className="col-md-2 pull-left">
@@ -307,7 +308,7 @@ class Row extends React.Component {
            required
             id="component-error"
             variant="standard"
-            label="Links"
+            label="Linked In Url"
             sx={{ width: 250 }}
             value={row.links}
             // helperText={ErrorMsg.Links}
@@ -345,7 +346,7 @@ class Personal extends React.Component {
         id : 0,
         name: "",
         designation: "",
-        number:"",
+        number:0,
         mailId: "",
         address : "",
         links: ""
@@ -381,7 +382,7 @@ class Personal extends React.Component {
           </TableHead>
           <TableBody>
             {rows.map((row) => (
-              <Row key={row.name} row={row} 
+              <Row key={row.id} row={row} 
               rows = {rows}
               {...this.props}
               />
