@@ -52,6 +52,7 @@ class Row extends React.Component {
         endDate : props.row.endDate,
         cgpa: props.row.cgpa,
         specialization: props.row.specialization,
+        stringEndDate : props.row.stringEndDate
       },
       Validations: {
         "Iscollege": true,
@@ -100,10 +101,17 @@ class Row extends React.Component {
   }
 
   handleDate = (date, type) => {
+    debugger;
+    if(date == null){
+      let row = { ...this.state.row };
+      row[type] = "";
+      this.setState({ row });
+    }else{
     const formattedDate = dayjs(date).format('YYYY-MM-DD');
     let row = { ...this.state.row };
     row[type] = formattedDate;
     this.setState({ row });
+    }
   }
 
   formatDateToYYYYMMDD = (date) => {
@@ -127,11 +135,11 @@ class Row extends React.Component {
   }
   
   submitEducation = () => {
+    debugger;
     let row = {...this.state.row};
     let ErrorMsg = {...this.state.ErrorMsg};
     let Validations = {...this.state.Validations};
-    debugger;
-    if(row.college && row.course && row.program && row.startDate && row.endDate && row.cgpa && row.specialization)
+    if(row.college && row.course && row.program && row.startDate  && row.cgpa)
     { const payload = {
       "userId": 1, 
       "id" : row.id,
@@ -153,7 +161,11 @@ class Row extends React.Component {
         row.course = data.data.course;
         row.program = data.data.program;
         row.startDate = data.data.startDate;
-        row.endDate = data.data.endDate;
+        if(data.data.endDate == null){
+          row.endDate = data.data.stringEndDate;
+        }else{
+          row.endDate = data.data.endDate;
+        }
         row.cgpa = data.data.cgpa;
         row.specialization = data.data.specialization;
         this.setState({row});
@@ -209,22 +221,27 @@ class Row extends React.Component {
         Validations.IsstartDate = false;
         ErrorMsg.startDate = "startDate cannot be empty";
       }
-      if(row.endDate === "" || row.endDate === null){
-        Validations.IsendDate = false;
-        ErrorMsg.endDate = "endDate cannot be empty";
-      }
+      // if(row.endDate === "" || row.endDate === null){
+      //   Validations.IsendDate = false;
+      //   ErrorMsg.endDate = "endDate cannot be empty";
+      // }
       if(row.cgpa === "" || row.cgpa === null){
         Validations.Iscgpa = false;
         ErrorMsg.cgpa = "cgpa cannot be empty";
       }
-      if(row.specialization === "" || row.specialization === null){
-        Validations.Isspecialization = false;
-        ErrorMsg.specialization = "specialization cannot be empty";
-      }
+      // if(row.specialization === "" || row.specialization === null){
+      //   Validations.Isspecialization = false;
+      //   ErrorMsg.specialization = "specialization cannot be empty";
+      // }
       this.setState({ row, Validations });
     }
     this.setState({ ErrorMsg });
   }
+
+   isValidDateFormat = (dateString) => {
+    const regex = /^\d{4}-\d{2}-\d{2}$/; // Check if format is YYYY-MM-DD
+    return regex.test(dateString);
+  };
 
   render() {
     const { row, ErrorMsg, Validations } = this.state;
@@ -257,16 +274,23 @@ class Row extends React.Component {
               </div>
           </TableCell>  
           <TableCell  className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> 
-          {row.endDate && (
-              <Chip
-                label={row.endDate ? (
-                  <Moment format={"YYYY-MM-DD"}>
-                    {row.endDate}
-                  </Moment>
-                ) : ''}
-                variant="filled"
-              />
-            )}
+          {row.endDate == null ? (  // Check if row.endDate is null
+  <Chip
+    label={row.stringEndDate} // Display the default string if endDate is null
+    variant="filled"
+  />
+) : (
+  <Chip
+    label={typeof row.endDate === 'string' && !this.isValidDateFormat(row.endDate) ? (
+      row.endDate // Display the string if it's not in the correct date format
+    ) : (
+      <Moment format={"YYYY-MM-DD"}>
+        {row.endDate}
+      </Moment>
+    )}
+    variant="filled"
+  />
+)}
               </div>
           </TableCell>
           <TableCell className={this.props.classes.tableCell}><div className={this.props.classes.iconWrapper}> {row.cgpa}</div></TableCell>
@@ -344,6 +368,8 @@ class Row extends React.Component {
         label = {"startDate"}
         handleDate = {this.handleDate}
         date = {row.startDate}
+        required={!Validations.IsstartDate}
+        error={!row.startDate}
         {...this.props}
       />
         </div>
@@ -353,6 +379,8 @@ class Row extends React.Component {
         handleDate = {this.handleDate}
         date = {row.endDate}
         minDate={row.startDate ? dayjs(row.startDate) : null}
+        required={false}
+        error={false}
         {...this.props}
       />
         </div>
@@ -368,22 +396,24 @@ class Row extends React.Component {
             // helperText={ErrorMsg.cgpa}
             onChange={(e) => {
               const { value } = e.target;
-              // Allow input only if it's a number or empty (to allow deletion)
-              if (/^\d*\.?\d*$/.test(value)) {
-                this.handleFieldChange("cgpa", e);  // Update only if valid
+              
+              // Update the regex to allow numbers, dots, commas, and any other special characters you want to allow
+              if (/^[\d.,$%-]*$/.test(value)) {
+                // This will allow digits, commas, periods, $, %, and -.
+                this.handleFieldChange("cgpa", e);
               }
             }}
             inputProps={{
               maxLength: 10, 
               inputMode: 'numeric',  // This prompts mobile devices to show a numeric keypad
-              pattern: '[0-9]*'      // This ensures only digits are accepted
+              pattern: '[0-9.,]*'    // This ensures only digits, commas, and dots are accepted
             }}
           />
         </div>
         <div className="col-md-2 pull-left">
           <TextField
-           error={!Validations.Isspecialization}
-           required
+          //  error={!Validations.Isspecialization}
+          //  required
             id="component-error"
             variant="standard"
             label="specialization"
@@ -391,7 +421,7 @@ class Row extends React.Component {
             value={row.specialization}
             // helperText={ErrorMsg.specialization}
             onChange={(e) => this.handleFieldChange("specialization", e)}
-            inputProps={{ maxLength: 15 }}
+            inputProps={{ maxLength: 20 }}
           />
         </div>
         </div>
@@ -419,6 +449,7 @@ class Education extends React.Component {
 
 
     componentDidMount(){
+      debugger;
       this.setState({ loading: true });
       axios.get(`http://localhost:5152/education/getEducation/1`)
       .then(response => {

@@ -25,7 +25,8 @@ public class Education {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate endDate;
-    private float cgpa;
+    private String cgpa;
     private String specialization;
+    private String stringEndDate;
 
 }

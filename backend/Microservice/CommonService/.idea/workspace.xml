@@ -5,28 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d568e1e6-bf7a-49e6-a59d-9e664ef37f90" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_projectlombok_lombok_1_18_34.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_projectlombok_lombok_1_18_28.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CommonService/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/CommonService/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CommonService/src/main/java/com/commonservice_microservice/CommonService/controller/CertificateController.java" beforeDir="false" afterPath="$PROJECT_DIR$/CommonService/src/main/java/com/commonservice_microservice/CommonService/controller/CertificateController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CommonService/src/main/java/com/commonservice_microservice/CommonService/controller/ProjectController.java" beforeDir="false" afterPath="$PROJECT_DIR$/CommonService/src/main/java/com/commonservice_microservice/CommonService/controller/ProjectController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CommonService/src/main/java/com/commonservice_microservice/CommonService/model/Project.java" beforeDir="false" afterPath="$PROJECT_DIR$/CommonService/src/main/java/com/commonservice_microservice/CommonService/model/Project.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Experience/Experience/src/main/java/com/experience_micorservice/Experience/controller/ExperienceController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../Experience/Experience/src/main/java/com/experience_micorservice/Experience/controller/ExperienceController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Experience/Experience/src/main/java/com/experience_micorservice/Experience/model/Experience.java" beforeDir="false" afterPath="$PROJECT_DIR$/../Experience/Experience/src/main/java/com/experience_micorservice/Experience/model/Experience.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../UserDetails/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../UserDetails/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../UserDetails/UserDetails/src/main/java/com/user_details/UserDetails/controller/UserDetailsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../UserDetails/UserDetails/src/main/java/com/user_details/UserDetails/controller/UserDetailsController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../summary/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../summary/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../summary/summary/src/main/java/com/summary_microservice/summary/controller/SummaryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../summary/summary/src/main/java/com/summary_microservice/summary/controller/SummaryController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../summary/summary/src/main/java/com/summary_microservice/summary/model/Summary.java" beforeDir="false" afterPath="$PROJECT_DIR$/../summary/summary/src/main/java/com/summary_microservice/summary/model/Summary.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../frontend/src/components/certificates/certificates.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/components/certificates/certificates.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../education/.idea/encodings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../education/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../education/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../education/Education/src/main/java/com/education_microservice/Education/controller/EducationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../education/Education/src/main/java/com/education_microservice/Education/controller/EducationController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../education/Education/src/main/java/com/education_microservice/Education/model/Education.java" beforeDir="false" afterPath="$PROJECT_DIR$/../education/Education/src/main/java/com/education_microservice/Education/model/Education.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../../frontend/src/components/education/Education.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/components/education/Education.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../../frontend/src/components/experience/experience.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/components/experience/experience.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../../frontend/src/components/personal/personal.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/components/personal/personal.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../../frontend/src/components/projects/projects.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/components/projects/projects.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../frontend/src/components/skills/skills.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/components/skills/skills.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../frontend/src/components/summary/summary.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/components/summary/summary.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../frontend/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/index.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../frontend/src/shared/datePicker.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/shared/datePicker.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../../frontend/src/shared/header.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/shared/header.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../frontend/src/shared/textArea.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/shared/textArea.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../frontend/src/shared/uploaddoc.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/shared/uploaddoc.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../frontend/src/shared/linearStepper.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../../frontend/src/shared/linearStepper.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -132,5 +127,10 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/CommonService$CommonServiceApplication.ic" NAME="CommonServiceApplication Coverage Results" MODIFIED="1729231159988" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+      <FILTER>com.commonservice_microservice.CommonService.*</FILTER>
+    </SUITE>
   </component>
 </project>

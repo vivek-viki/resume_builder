@@ -18,6 +18,7 @@ public class UserDetailsController {
     @PostMapping("/addDetails")
     public ResponseEntity<String> addDetails(@RequestBody UserDetails details){
         try {
+            Thread.sleep(300);
             service.addDetails(details);
 
             return ResponseEntity.status(HttpStatus.OK).body("UserDetails added successfully.");
@@ -32,6 +33,9 @@ public class UserDetailsController {
     public ResponseEntity<?> getDetails(@PathVariable long userId){
         try{
             UserDetails details = service.getDetails(userId);
+            if (details == null) {
+                details = new UserDetails();
+            }
             return ResponseEntity.status(HttpStatus.OK).body(details);
         }
         catch (Exception e){

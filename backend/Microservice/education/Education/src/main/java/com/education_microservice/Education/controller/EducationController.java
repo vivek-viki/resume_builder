@@ -40,6 +40,8 @@ public class EducationController {
                 Education savedEducation = educationService.updateEducation(updatedEducation);
                 return ResponseEntity.status(HttpStatus.OK).body(savedEducation);
             }else {
+                if(education.getEndDate() == null)
+                    education.setStringEndDate("Pursuing");
                 Education data = educationService.addEducation(education);
 
                 return ResponseEntity.status(HttpStatus.OK).body(data);

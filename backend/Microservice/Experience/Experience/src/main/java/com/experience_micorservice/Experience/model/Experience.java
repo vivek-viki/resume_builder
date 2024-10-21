@@ -30,4 +30,6 @@ public class Experience {
 
     @Column(columnDefinition = "TEXT")
     private String tasks;
+
+    private String stringEndDate;
 }
